@@ -7,6 +7,10 @@ class Listeners(commands.Cog):
         self.bot = bot
         self.db: Db = db
 
+        self.really_bad_curse_words = []
+        with open("resources/really_bad_curse_words.txt", "r") as f:
+            self.really_bad_curse_words = [line.strip() for line in f.readlines()]
+
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: nextcord.Reaction, user: nextcord.Member):
         if user.bot:
@@ -28,6 +32,10 @@ class Listeners(commands.Cog):
             return
 
         await self.db.add_message(message.id, message.author.id, message.channel.id, message.content)
+
+        if any(curse_word in message.content.lower() for curse_word in self.really_bad_curse_words):
+            await message.delete()
+            await message.channel.send(f"⚠️ {message.author.mention}, your message contained inappropriate language and has been removed.", delete_after=5)
 
         print(f"Processed message from {message.author}: {message.content}")
 
