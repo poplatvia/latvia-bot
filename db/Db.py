@@ -3,7 +3,7 @@ import aiosqlite
 class Db:
     _instance = None
 
-    def __new__(cls, *args, **kwargs) -> Db:
+    def __new__(cls, *args, **kwargs):
         """Python workaround to make a singleton."""
         if cls._instance is None:
             cls._instance = super(Db, cls).__new__(cls)
