@@ -27,7 +27,7 @@ class Listeners(commands.Cog):
         if message.author.bot:
             return
 
-        await self.db.add_message(message.author.id, message.channel.id, message.id, message.content)
+        await self.db.add_message(message.id, message.author.id, message.channel.id, message.content)
 
         print(f"Processed message from {message.author}: {message.content}")
 

@@ -3,17 +3,17 @@ import aiosqlite
 class Db:
     _instance = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Db:
         """Python workaround to make a singleton."""
         if cls._instance is None:
             cls._instance = super(Db, cls).__new__(cls)
             cls._instance._initialized = False
         return cls._instance
 
-    def __init__(self, db_name="main.db"):
+    def __init__(self, db_name="main.db") -> None:
         self.db_name = db_name
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize the database by creating the necessary tables."""
         async with aiosqlite.connect(self.db_name) as db:
             await db.execute(
@@ -64,7 +64,7 @@ class Db:
 
     # -------------- Moderation -------------- #
 
-    async def add_warning(self, user, reason, issuer_id):
+    async def add_warning(self, user, reason, issuer_id) -> None:
         async with aiosqlite.connect(self.db_name) as db:
             await db.execute('''
                 INSERT INTO warnings (user_id, reason, issuer)
@@ -80,15 +80,15 @@ class Db:
 
     # -------------- User Statistics -------------- #
 
-    async def add_message(self, user_id, channel_id, message_content):
+    async def add_message(self, message_id, user_id, channel_id, message_content: str):
         async with aiosqlite.connect(self.db_name) as db:
             await db.execute('''
-                INSERT INTO messages (user_id, channel_id, message_content)
-                VALUES (?, ?, ?)
-            ''', (str(user_id), str(channel_id), message_content))
+                INSERT INTO messages (message_id, user_id, channel_id, message_content)
+                VALUES (?, ?, ?, ?)
+            ''', (str(message_id), str(user_id), str(channel_id), message_content))
             await db.commit()
 
-    async def add_reaction(self, message_id, user_id, reaction_emoji, isAdd):
+    async def add_reaction(self, message_id, user_id, reaction_emoji, add_or_remove: str):
         async with aiosqlite.connect(self.db_name) as db:
             await db.execute('''
                 INSERT INTO reactions (message_id, user_id, reaction_emoji, add_or_remove)

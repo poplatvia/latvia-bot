@@ -220,3 +220,6 @@ token.txt
 
 main.db
 /main.db
+
+deploy.sh
+/deploy.sh
