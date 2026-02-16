@@ -1,0 +1,35 @@
+import nextcord
+from nextcord.ext import commands
+from db.Db import Db
+
+class Listeners(commands.Cog):
+    def __init__(self, bot, db):
+        self.bot = bot
+        self.db: Db = db
+
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction: nextcord.Reaction, user: nextcord.Member):
+        if user.bot:
+            return
+        await self.db.add_reaction(reaction.message.id, user.id, reaction.emoji, "add")
+            
+        print(f"{user.name} reacted with {reaction.emoji} on message {reaction.message.id}")
+
+    @commands.Cog.listener()
+    async def on_reaction_remove(self, reaction: nextcord.Reaction, user: nextcord.Member):
+        if user.bot:
+            return
+        await self.db.add_reaction(reaction.message.id, user.id, reaction.emoji, "remove")
+        print(f"{user.name} removed reaction {reaction.emoji} from message {reaction.message.id}")
+
+    @commands.Cog.listener()
+    async def on_message(self, message: nextcord.Message):
+        if message.author.bot:
+            return
+
+        await self.db.add_message(message.author.id, message.channel.id, message.id, message.content)
+
+        print(f"Processed message from {message.author}: {message.content}")
+
+    async def cog_unload(self):
+        await self.db.close()

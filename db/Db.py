@@ -88,7 +88,7 @@ class Db:
             ''', (str(user_id), str(channel_id), message_content))
             await db.commit()
 
-    async def add_reaction(self, message_id, user_id, reaction_emoji, add_or_remove):
+    async def add_reaction(self, message_id, user_id, reaction_emoji, isAdd):
         async with aiosqlite.connect(self.db_name) as db:
             await db.execute('''
                 INSERT INTO reactions (message_id, user_id, reaction_emoji, add_or_remove)

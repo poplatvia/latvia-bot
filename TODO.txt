@@ -4,4 +4,5 @@
 - Votekick system
 - Elo system
     - too many messages too frequently lowers elo
+    - more curse words lowers elo
     - lower elo makes it easier to be votekicked
