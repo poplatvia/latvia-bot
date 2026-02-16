@@ -2,6 +2,7 @@ import nextcord
 from cogs.Admin import AdminCommands
 from cogs.Moderation import ModerationCommands
 from cogs.Listeners import Listeners
+from cogs.Democracy import DemocracyCommands
 from db.Db import Db
 
 intents = nextcord.Intents.all()
@@ -18,6 +19,7 @@ admins: list[int] = [1330980258253635594]
 
 client.add_cog(AdminCommands(client, db, admins))
 client.add_cog(ModerationCommands(client, db, admins))
+client.add_cog(DemocracyCommands(client, db))
 client.add_cog(Listeners(client, db))
 
 client.run(open("token.txt", 'r').readline().replace("\n", ""))

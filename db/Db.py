@@ -53,6 +53,17 @@ class Db:
                 '''
             )
 
+            await db.execute(
+                '''
+                CREATE TABLE IF NOT EXISTS votekicks (
+                id INTEGER PRIMARY KEY,
+                target_user_id INTEGER,
+                started_by INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                '''
+            )
+
             await db.commit()
 
     # -------------- CSV -------------- #
@@ -94,6 +105,15 @@ class Db:
                 INSERT INTO reactions (message_id, user_id, reaction_emoji, add_or_remove)
                 VALUES (?, ?, ?, ?)
             ''', (str(message_id), str(user_id), reaction_emoji, add_or_remove))
+            await db.commit()
+
+    # -------------- Votekick -------------- #
+    async def add_votekick(self, target_user_id, started_by):
+        async with aiosqlite.connect(self.db_name) as db:
+            await db.execute('''
+                INSERT INTO votekicks (target_user_id, started_by)
+                VALUES (?, ?)
+            ''', (str(target_user_id), str(started_by)))
             await db.commit()
         
     # --- DB migration n shiet --- #    
