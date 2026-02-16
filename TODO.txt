@@ -1,0 +1,7 @@
+- Automatically delete messages if the message contains more than 1 curse word every ( let's say) 10 words.
+- Automatically delete messages with obscene content (slurs, etc.)
+- softmute which simply deletes a user's message on send
+- Votekick system
+- Elo system
+    - too many messages too frequently lowers elo
+    - lower elo makes it easier to be votekicked
