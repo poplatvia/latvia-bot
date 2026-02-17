@@ -153,7 +153,7 @@ class Db:
             # 1 spam every 100 messages allowed
             if num_spams > 0:
                 num_messages_between_spams = count/max(1,num_spams)
-                count += int(100-min(100, num_messages_between_spams))
+                count += int(5*(100-min(100, num_messages_between_spams)))
 
             num_warnings = await self.get_number_of_warnings(user_id)
             count += num_warnings*50
