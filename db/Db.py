@@ -157,17 +157,17 @@ class Db:
 
             num_warnings = await self.get_number_of_warnings(user_id)
             count += num_warnings*50
-            return elo/count
+            return round(elo/count, 2)
         
-    async def has_been_week_since_first_message(self, user_id) -> bool:
+    async def time_since_first_message(self, user_id):
         async with aiosqlite.connect(self.db_name) as db:
             cursor = await db.execute('SELECT created_at FROM messages WHERE user_id = ? ORDER BY created_at ASC LIMIT 1', (str(user_id),))
             row = await cursor.fetchone()
             if row is None:
-                return False
+                return datetime.now() - datetime.now()  # If user has no messages, return 0 time
             first_message_time = row[0]
             first_message_time = datetime.strptime(first_message_time, "%Y-%m-%d %H:%M:%S")
-            return datetime.now() - first_message_time > timedelta(days=7)
+            return datetime.now() - first_message_time
 
     async def number_of_spams(self, user_id):
         async with aiosqlite.connect(self.db_name) as db:

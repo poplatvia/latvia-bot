@@ -21,9 +21,9 @@ class DemocracyCommands(commands.Cog):
             # await ctx.send("❌ You cannot votekick yourself!")
             # return
 
-        has_been_week = await self.db.has_been_week_since_first_message(member.id)
-        if not has_been_week:
-            await ctx.send(f"⚠️ {member.mention}, you need to have been active for at least a week to participate in votekicks.", delete_after=5)
+        time_since_first_message = await self.db.time_since_first_message(member.id)
+        if time_since_first_message < timedelta(days=1):
+            await ctx.send(f"⚠️ {member.mention}, you need to have been active for at least a day to participate in votekicks.", delete_after=5)
             return
 
         if member.id in self.admins:
