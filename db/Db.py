@@ -85,6 +85,12 @@ class Db:
             ''', (str(user), reason, str(issuer_id)))
             await db.commit()
 
+    async def get_number_of_warnings(self, user) -> int:
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT COUNT(*) FROM warnings WHERE user_id = ?', (str(user),))
+            row = await cursor.fetchone()
+            return int(row[0]) if row else 0
+
     async def get_warnings(self, user):
         async with aiosqlite.connect(self.db_name) as db:
             cursor = await db.execute('SELECT reason, issuer, created_at FROM warnings WHERE user_id = ?', (str(user),))
@@ -120,6 +126,11 @@ class Db:
 
     # -------------- Elo -------------- #
     async def calculate_elo(self, user_id):
+        """
+        User's elo is calculated based on the number of messages, 
+        the number of curse words, and the number of warnings. The 
+        more messages and the fewer curse words/warnings, the higher the elo.
+        """
         # x = number of chars in a message
         # y = number of curses in a message
         curse_calc = lambda x, y: max(0, 100*(1-((5*y)/x)))
@@ -139,6 +150,8 @@ class Db:
                 elo += elo_change
             if count == 0:
                 return 0
+            num_warnings = await self.get_number_of_warnings(user_id)
+            count += num_warnings*10
             return elo/count
         
     async def has_been_week_since_first_message(self, user_id) -> bool:

@@ -23,16 +23,18 @@ class DemocracyCommands(commands.Cog):
 
         has_been_week = await self.db.has_been_week_since_first_message(member.id)
         if not has_been_week:
-            await ctx.send(f"⚠️ {member.mention}, you need to have been active for at least a week to participate in votekicks.", delete_after=5)
-            return
+            pass
+            #await ctx.send(f"⚠️ {member.mention}, you need to have been active for at least a week to participate in votekicks.", delete_after=5)
+            #return
 
         if member.id in self.admins:
             await ctx.send("❌ You cannot votekick Great Leader Poplatvia!")
             return
         
         if member.bot:
-            await ctx.send("❌ You cannot votekick a bot!")
-            return
+            pass
+            #await ctx.send("❌ You cannot votekick a bot!")
+            #return
     
         
         # Check if there's already an active votekick for this member
@@ -41,15 +43,19 @@ class DemocracyCommands(commands.Cog):
             return
         
         await self.db.add_votekick(member.id, ctx.user.id)
+
+        defendants_elo = await self.db.calculate_elo(member.id)
+        # If user has perfect elo, number of votes needed is 20.
+        num_votes_needed = max(3, int(defendants_elo/5))
         
         # Create the votekick message
         embed = nextcord.Embed(
             title="🗳️ VOTEKICK IN PROGRESS",
-            description=f"**Votekick against:** {member.mention}\n\n**Requirement:** 5 reactions to kick",
+            description=f"**Votekick against:** {member.mention}\n\n**Requirement:** {num_votes_needed} reactions to kick",
             color=nextcord.Color.red()
         )
         embed.add_field(name="Started by", value=ctx.user.mention, inline=False)
-        embed.add_field(name="React with 👍 to vote for the kick", value="Current reactions: 0/5", inline=False)
+        embed.add_field(name=f"React with 👍 to vote for the kick", value=f"Current reactions: 0/{num_votes_needed}", inline=False)
         
         await ctx.send(f"Votekick started against {member.mention}!", ephemeral=True)
         votekick_message = await ctx.channel.send(embed=embed)
@@ -62,6 +68,7 @@ class DemocracyCommands(commands.Cog):
             "member": member,
             "guild_id": ctx.guild.id,
             "started_by": ctx.user,
+            "required_votes": num_votes_needed,
             "expires_at": datetime.utcnow() + timedelta(minutes=5)
         }
         
@@ -86,7 +93,7 @@ class DemocracyCommands(commands.Cog):
             # votekick failed
             fail_embed = nextcord.Embed(
                 title="❌ VOTEKICK FAILED",
-                description=f"Time expired with {reaction_count}/5 votes",
+                description=f"Votekick started by {self.active_votes[member_id]['started_by'].mention} against {self.active_votes[member_id]['member'].mention} failed. Time expired with {reaction_count}/{self.active_votes[member_id]['required_votes']} votes",
                 color=nextcord.Color.orange()
             )
             await votekick_msg.edit(embed=fail_embed)
@@ -111,13 +118,13 @@ class DemocracyCommands(commands.Cog):
                 embed.set_field_at(
                     1, 
                     name="React with 👍 to vote for the kick",
-                    value=f"Current reactions: {reaction_count}/5",
+                    value=f"Current reactions: {reaction_count}/{vote_data['required_votes']}",
                     inline=False
                 )
                 await reaction.message.edit(embed=embed)
                 
                 # Check if threshold is reached
-                if reaction_count >= 5:
+                if reaction_count >= vote_data['required_votes']:
                     member = vote_data["member"]
                     started_by = vote_data["started_by"]
                     
