@@ -89,11 +89,14 @@ class Db:
                 await db.execute('INSERT INTO leaderboard (user_id, elo) VALUES (?, ?)', (str(user_id), elo))
             await db.commit()
 
-    async def get_leaderboard(self, n=5):
+    async def get_leaderboard(self, n=5, allow_min_or_max_elo=True):
         async with aiosqlite.connect(self.db_name) as db:
             user_elo: dict = {}
             for label in ["ASC", "DESC"]:
-                cursor = await db.execute(f'SELECT user_id, elo FROM leaderboard ORDER BY elo {label} LIMIT ?', (n,))
+                if not allow_min_or_max_elo:
+                    cursor = await db.execute(f'SELECT user_id, elo FROM leaderboard WHERE elo > 0 AND elo < 100 ORDER BY elo {label} LIMIT ?', (n,))
+                else:
+                    cursor = await db.execute(f'SELECT user_id, elo FROM leaderboard ORDER BY elo {label} LIMIT ?', (n,))
                 row = await cursor.fetchall()
                 for user in row:
                     user_id = user[0]
