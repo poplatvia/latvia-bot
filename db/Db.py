@@ -67,7 +67,39 @@ class Db:
                 '''
             )
 
+            await db.execute(
+                '''
+                CREATE TABLE IF NOT EXISTS leaderboard (
+                user_id INTEGER PRIMARY KEY,
+                elo REAL
+                );
+                '''
+            )
+
             await db.commit()
+
+    async def generate_leaderboard(self):
+        async with aiosqlite.connect(self.db_name) as db:
+            await db.execute('DELETE FROM leaderboard')
+            cursor = await db.execute('SELECT DISTINCT user_id FROM messages')
+            row = await cursor.fetchall()
+            for user in row:
+                user_id = user[0]
+                elo = await self.calculate_elo(user_id)
+                await db.execute('INSERT INTO leaderboard (user_id, elo) VALUES (?, ?)', (str(user_id), elo))
+            await db.commit()
+
+    async def get_leaderboard(self, n=5):
+        async with aiosqlite.connect(self.db_name) as db:
+            user_elo: dict = {}
+            for label in ["ASC", "DESC"]:
+                cursor = await db.execute(f'SELECT user_id, elo FROM leaderboard ORDER BY elo {label} LIMIT ?', (n,))
+                row = await cursor.fetchall()
+                for user in row:
+                    user_id = user[0]
+                    elo = user[1]
+                    user_elo[user_id] = elo
+            return user_elo
 
     # -------------- CSV -------------- #
     async def to_CSV(self):

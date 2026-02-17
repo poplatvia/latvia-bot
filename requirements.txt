@@ -1,5 +1,2 @@
 nextcord
 aiosqlite
-matplotlib
-pandas
-numpy

@@ -40,6 +40,14 @@ class AdminCommands(commands.Cog):
         except Exception as e:
             await ctx.response.send_message(f"Error executing query: {e}", ephemeral=True)
 
+    @nextcord.slash_command(name="generate_leaderboard", description="(Admin command) Generate leaderboard.")
+    async def generate_leaderboard(self, ctx):
+        if ctx.user.id not in self.config.config["admins"]:
+            await ctx.response.send_message("Admins only.", ephemeral=True)
+        
+        await self.db.generate_leaderboard()
+        await ctx.response.send_message("Leaderboard generated.", ephemeral=True)
+
     @nextcord.slash_command(name="config", description="Different config commands.")
     async def config(self, ctx: nextcord.Interaction):
         pass
