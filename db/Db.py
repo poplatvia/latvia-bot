@@ -1,4 +1,5 @@
 import aiosqlite
+from datetime import datetime, timedelta
 
 class Db:
     _instance = None
@@ -139,6 +140,16 @@ class Db:
             if count == 0:
                 return 0
             return elo/count
+        
+    async def has_been_week_since_first_message(self, user_id) -> bool:
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT created_at FROM messages WHERE user_id = ? ORDER BY created_at ASC LIMIT 1', (str(user_id),))
+            row = await cursor.fetchone()
+            if row is None:
+                return False
+            first_message_time = row[0]
+            first_message_time = datetime.strptime(first_message_time, "%Y-%m-%d %H:%M:%S")
+            return datetime.now() - first_message_time > timedelta(days=7)
 
     # --- DB migration n shiet --- #    
     async def raw_sql(self, string):
