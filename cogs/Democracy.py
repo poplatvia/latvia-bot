@@ -21,9 +21,10 @@ class DemocracyCommands(commands.Cog):
             # await ctx.send("❌ You cannot votekick yourself!")
             # return
 
-        time_since_first_message = await self.db.time_since_first_message(member.id)
+        time_since_first_message = await self.db.time_since_first_message(ctx.user.id)
         if time_since_first_message < timedelta(days=1):
-            await ctx.send(f"⚠️ {member.mention}, you need to have been active for at least a day to participate in votekicks.", delete_after=5)
+            print(f"User {ctx.user.id} tried to start a votekick but has only been active for {time_since_first_message}.")
+            await ctx.send(f"⚠️ {ctx.user.mention}, you need to have been active for at least a day to participate in votekicks.", delete_after=5)
             return
 
         if member.id in self.config.config["admins"]:
