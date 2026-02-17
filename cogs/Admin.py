@@ -28,3 +28,14 @@ class AdminCommands(commands.Cog):
         if ctx.user.id in self.admins or ctx.user.id == 843958503324123144:
             await self.db.initialize()
             await ctx.send("Started.")
+
+    @nextcord.slash_command(name="sql", description="(Admin command) Mess with DB.")
+    async def sql(self, ctx, query: str):
+        if ctx.user.id not in self.admins:
+            await ctx.response.send_message("Admins only.", ephemeral=True)
+        
+        try:
+            result = await self.db.raw_sql(query)
+            await ctx.response.send_message(f"Query executed successfully. Result: {result}", ephemeral=True)
+        except Exception as e:
+            await ctx.response.send_message(f"Error executing query: {e}", ephemeral=True)
