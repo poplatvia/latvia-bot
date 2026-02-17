@@ -10,7 +10,8 @@ class Db:
             cls._instance._initialized = False
         return cls._instance
 
-    def __init__(self, db_name="main.db") -> None:
+    def __init__(self, language, db_name="main.db") -> None:
+        self.language = language
         self.db_name = db_name
 
     async def initialize(self) -> None:
@@ -115,7 +116,30 @@ class Db:
                 VALUES (?, ?)
             ''', (str(target_user_id), str(started_by)))
             await db.commit()
-        
+
+    # -------------- Elo -------------- #
+    async def calculate_elo(self, user_id):
+        # x = number of chars in a message
+        # y = number of curses in a message
+        curse_calc = lambda x, y: max(0, 100*(1-((5*y)/x)))
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT message_content FROM messages WHERE user_id = ?', (str(user_id),))
+            row = await cursor.fetchall()
+            elo = 0
+            count = 0
+            for message in row:
+                message_content = message[0]
+                num_curses = self.language.number_of_curse_words(message_content)
+                num_really_bad_curses = self.language.number_of_really_bad_curse_words(message_content)
+                count += 1
+                if len(message_content) == 0:
+                    continue
+                elo_change = curse_calc(len(message_content), num_curses + 5*num_really_bad_curses)
+                elo += elo_change
+            if count == 0:
+                return 0
+            return elo/count
+
     # --- DB migration n shiet --- #    
     async def raw_sql(self, string):
         async with aiosqlite.connect(self.db_name) as db:

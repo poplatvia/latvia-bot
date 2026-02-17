@@ -1,15 +1,13 @@
 import nextcord
 from nextcord.ext import commands
 from db.Db import Db
+from utils.Language import Language
 
 class Listeners(commands.Cog):
-    def __init__(self, bot, db):
+    def __init__(self, bot, db, language):
         self.bot = bot
         self.db: Db = db
-
-        self.really_bad_curse_words = []
-        with open("resources/really_bad_curse_words.txt", "r") as f:
-            self.really_bad_curse_words = [line.strip() for line in f.readlines()]
+        self.language: Language = language
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: nextcord.Reaction, user: nextcord.Member):
@@ -33,7 +31,7 @@ class Listeners(commands.Cog):
 
         await self.db.add_message(message.id, message.author.id, message.channel.id, message.content)
 
-        if any(curse_word in message.content.lower() for curse_word in self.really_bad_curse_words):
+        if self.language.contains_really_bad_language(message.content):
             await message.delete()
             await message.channel.send(f"⚠️ {message.author.mention}, your message contained inappropriate language and has been removed.", delete_after=5)
 
