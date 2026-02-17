@@ -13,3 +13,8 @@ class GeneralCommands(commands.Cog):
         elo = await self.db.calculate_elo(user.id)
         await ctx.send(f"{user.mention}'s elo is {elo}")
 
+    @nextcord.slash_command(name="spam", description="Number of times a user has spammed.")
+    async def spam(self, ctx, user: nextcord.User):
+        count = await self.db.number_of_spams(user.id)
+        await ctx.send(f"{user.mention} has spammed {count} times.")
+

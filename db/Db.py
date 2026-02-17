@@ -146,12 +146,17 @@ class Db:
                 count += 1
                 if len(message_content) == 0:
                     continue
-                elo_change = curse_calc(len(message_content), num_curses + 5*num_really_bad_curses)
-                elo += elo_change
+                elo += curse_calc(len(message_content), num_curses + 5*num_really_bad_curses)
             if count == 0:
                 return 0
+            num_spams = await self.number_of_spams(user_id)
+            # 1 spam every 100 messages allowed
+            if num_spams > 0:
+                num_messages_between_spams = count/max(1,num_spams)
+                count += int(10*(100-min(100, num_messages_between_spams)))
+
             num_warnings = await self.get_number_of_warnings(user_id)
-            count += num_warnings*10
+            count += num_warnings*50
             return elo/count
         
     async def has_been_week_since_first_message(self, user_id) -> bool:
@@ -163,6 +168,29 @@ class Db:
             first_message_time = row[0]
             first_message_time = datetime.strptime(first_message_time, "%Y-%m-%d %H:%M:%S")
             return datetime.now() - first_message_time > timedelta(days=7)
+
+    async def number_of_spams(self, user_id):
+        async with aiosqlite.connect(self.db_name) as db:
+            # Introduction to databases nightmare query flashback
+            cursor = await db.execute("""
+                SELECT COUNT(*) AS spam_instances
+                FROM (
+                    SELECT
+                        created_at,
+                        LAG(created_at) OVER (
+                            PARTITION BY user_id
+                            ORDER BY created_at
+                        ) AS prev_created_at
+                    FROM messages
+                    WHERE user_id = ?
+                )
+                WHERE prev_created_at IS NOT NULL
+                    AND ABS(strftime('%s', created_at) - strftime('%s', prev_created_at)) <= 1;
+            """, (user_id,))
+            
+            row = await cursor.fetchone()
+            return int(row[0]) if row else 0
+
 
     # --- DB migration n shiet --- #    
     async def raw_sql(self, string):

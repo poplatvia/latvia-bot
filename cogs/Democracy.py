@@ -23,18 +23,16 @@ class DemocracyCommands(commands.Cog):
 
         has_been_week = await self.db.has_been_week_since_first_message(member.id)
         if not has_been_week:
-            pass
-            #await ctx.send(f"⚠️ {member.mention}, you need to have been active for at least a week to participate in votekicks.", delete_after=5)
-            #return
+            await ctx.send(f"⚠️ {member.mention}, you need to have been active for at least a week to participate in votekicks.", delete_after=5)
+            return
 
         if member.id in self.admins:
             await ctx.send("❌ You cannot votekick Great Leader Poplatvia!")
             return
         
         if member.bot:
-            pass
-            #await ctx.send("❌ You cannot votekick a bot!")
-            #return
+            await ctx.send("❌ You cannot votekick a bot!")
+            return
     
         
         # Check if there's already an active votekick for this member
