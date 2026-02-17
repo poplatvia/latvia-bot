@@ -4,11 +4,11 @@ import asyncio
 from datetime import datetime, timedelta
 
 class DemocracyCommands(commands.Cog):
-    def __init__(self, bot, db, admins: list[int]):
+    def __init__(self, bot, db, config):
         self.bot = bot
         self.db = db
         self.active_votes = {}  # active votekicks
-        self.admins = admins
+        self.config = config
     
     @nextcord.slash_command(name="votekick", description="Votekick user.")
     @commands.has_permissions(send_messages=True)
@@ -26,7 +26,7 @@ class DemocracyCommands(commands.Cog):
             await ctx.send(f"⚠️ {member.mention}, you need to have been active for at least a day to participate in votekicks.", delete_after=5)
             return
 
-        if member.id in self.admins:
+        if member.id in self.config.config["admins"]:
             await ctx.send("❌ You cannot votekick Great Leader Poplatvia!")
             return
         

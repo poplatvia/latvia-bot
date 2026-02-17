@@ -1,0 +1,11 @@
+{
+    "admins": [
+        1330980258253635594
+    ],
+    "elo": {
+        "curse_multiplier": 10,
+        "slur_multiplier": 50,
+        "warning_multiplier": 50,
+        "spam_multiplier": 10.0
+    }
+}

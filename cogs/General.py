@@ -4,9 +4,10 @@ import sys
 from db.Db import Db
 
 class GeneralCommands(commands.Cog):
-    def __init__(self, bot, db):
+    def __init__(self, bot, db, config):
         self.bot = bot
         self.db = db
+        self.config = config
 
     @nextcord.slash_command(name="elo", description="Calculate a user's elo.")
     async def elo(self, ctx, user: nextcord.User):

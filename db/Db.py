@@ -11,8 +11,9 @@ class Db:
             cls._instance._initialized = False
         return cls._instance
 
-    def __init__(self, language, db_name="main.db") -> None:
+    def __init__(self, language, config, db_name="main.db") -> None:
         self.language = language
+        self.config = config
         self.db_name = db_name
 
     async def initialize(self) -> None:
@@ -133,7 +134,7 @@ class Db:
         """
         # x = number of chars in a message
         # y = number of curses in a message
-        curse_calc = lambda x, y: max(0, 100*(1-((5*y)/x)))
+        curse_calc = lambda x, y, z: max(0, 100*(1-((self.config.config["elo"]["curse_multiplier"]*y + self.config.config["elo"]["slur_multiplier"]*z)/x)))
         async with aiosqlite.connect(self.db_name) as db:
             cursor = await db.execute('SELECT message_content FROM messages WHERE user_id = ?', (str(user_id),))
             row = await cursor.fetchall()
@@ -146,18 +147,24 @@ class Db:
                 count += 1
                 if len(message_content) == 0:
                     continue
-                elo += curse_calc(len(message_content), num_curses + 5*num_really_bad_curses)
+                elo += curse_calc(len(message_content), num_curses, num_really_bad_curses)
             if count == 0:
                 return 0
+            
+            elo_avg = elo / count
+
             num_spams = await self.number_of_spams(user_id)
             # 1 spam every 100 messages allowed
             if num_spams > 0:
-                num_messages_between_spams = count/max(1,num_spams)
-                count += int(5*(100-min(100, num_messages_between_spams)))
+                num_messages_between_spams = count / max(1, num_spams)
+                spam_penalty = max(0, 1 - self.config.config["elo"]["spam_multiplier"] * max(0, 1 - num_messages_between_spams / 100))
+                elo_avg *= spam_penalty
 
             num_warnings = await self.get_number_of_warnings(user_id)
-            count += num_warnings*50
-            return round(elo/count, 2)
+            warning_penalty = num_warnings * self.config.config["elo"]["warning_multiplier"]
+            elo_avg = max(0, elo_avg - warning_penalty)
+
+            return round(elo_avg, 2)
         
     async def time_since_first_message(self, user_id):
         async with aiosqlite.connect(self.db_name) as db:

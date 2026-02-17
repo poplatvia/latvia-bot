@@ -4,10 +4,11 @@ from db.Db import Db
 from utils.Language import Language
 
 class Listeners(commands.Cog):
-    def __init__(self, bot, db, language):
+    def __init__(self, bot, db, language, config):
         self.bot = bot
         self.db: Db = db
         self.language: Language = language
+        self.config = config
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: nextcord.Reaction, user: nextcord.Member):
