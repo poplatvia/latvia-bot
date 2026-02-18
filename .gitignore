@@ -223,3 +223,6 @@ main.db
 
 deploy.sh
 /deploy.sh
+
+config.json
+/config.json

@@ -2,6 +2,7 @@ import nextcord
 from nextcord.ext import commands
 import sys
 from db.Db import Db
+from checks import bot_channel_only
 
 class GeneralCommands(commands.Cog):
     def __init__(self, bot, db, config):
@@ -9,19 +10,26 @@ class GeneralCommands(commands.Cog):
         self.db = db
         self.config = config
 
+    # Prevents ugly errors from printing
+    async def cog_application_command_error(self, interaction: nextcord.Interaction, error):
+        if isinstance(error, nextcord.errors.ApplicationCheckFailure):
+            pass
+
     @nextcord.slash_command(name="elo", description="Calculate a user's elo.")
+    @bot_channel_only()
     async def elo(self, ctx, user: nextcord.User):
         elo = await self.db.calculate_elo(user.id)
         await ctx.send(f"{user.mention}'s elo is {elo}")
 
     @nextcord.slash_command(name="spam", description="Number of times a user has spammed.")
+    @bot_channel_only()
     async def spam(self, ctx, user: nextcord.User):
         count = await self.db.number_of_spams(user.id)
         await ctx.send(f"{user.mention} has spammed {count} times.")
 
     @nextcord.slash_command(name="leaderboard", description="Show the elo leaderboard.")
+    @bot_channel_only()
     async def leaderboard(self, ctx):
-
         leaderboard = await self.db.get_leaderboard(allow_min_or_max_elo=False)
         if not leaderboard:
             await ctx.send("Leaderboard is empty.")

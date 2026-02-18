@@ -20,10 +20,7 @@ class Config:
                 break
             except Exception as e:
                 # copy config_example.json to config.json
-                with open("config_example.json", "r") as f:
-                    example_config = json.load(f)
-                with open("config.json", "w") as f:
-                    json.dump(example_config, f, indent=4)
+                self.reset_config()
         if self.config is None:
             raise Exception("Failed to load config.json")
         
@@ -34,6 +31,13 @@ class Config:
     def read_config(self):
         with open("config.json", "r") as f:
             self.config = json.load(f)
+
+    def reset_config(self):
+        with open("config_example.json", "r") as f:
+            example_config = json.load(f)
+        with open("config.json", "w") as f:
+            json.dump(example_config, f, indent=4)
+        self.config = example_config
     
     def __del__(self):
         self.write_config()
