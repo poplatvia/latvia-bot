@@ -216,23 +216,27 @@ class Db:
             return datetime.now() - first_message_time
 
     async def number_of_spams(self, user_id):
+        # 3 messages sent within 0.8 of each other
         async with aiosqlite.connect(self.db_name) as db:
-            # Introduction to databases nightmare query flashback
             cursor = await db.execute("""
                 SELECT COUNT(*) AS spam_instances
                 FROM (
                     SELECT
                         created_at,
-                        LAG(created_at) OVER (
+                        LAG(created_at, 1) OVER (
                             PARTITION BY user_id
                             ORDER BY created_at
-                        ) AS prev_created_at
+                        ) AS prev_created_at,
+                        LAG(created_at, 2) OVER (
+                            PARTITION BY user_id
+                            ORDER BY created_at
+                        ) AS prev_prev_created_at
                     FROM messages
                     WHERE user_id = ?
                 )
-                WHERE prev_created_at IS NOT NULL
-                    AND ABS(strftime('%s', created_at) - strftime('%s', prev_created_at)) <= 1;
-            """, (user_id,))
+                WHERE prev_prev_created_at IS NOT NULL
+                    AND ABS(strftime('%s', created_at) - strftime('%s', prev_prev_created_at)) <= 0.8;
+            """, (str(user_id),))
             
             row = await cursor.fetchone()
             return int(row[0]) if row else 0
