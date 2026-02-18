@@ -1,15 +1,15 @@
 {
-	"admins": [
-		1330980258253635594
-	],
-	"bot_channels": [
-		1473603490520502333,
-		1472931816934740142
-	],
-	"elo": {
-		"curse_multiplier": 10,
-		"slur_multiplier": 50,
-		"warning_multiplier": 50,
-		"spam_multiplier": 30
-	}
+    "admins": [
+        1330980258253635594
+    ],
+    "bot_channels": [
+        1473603490520502333,
+        1472931816934740142
+    ],
+    "elo": {
+        "curse_multiplier": 10,
+        "slur_multiplier": 50,
+        "warning_multiplier": 50,
+        "spam_multiplier": 1.0
+    }
 }

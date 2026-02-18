@@ -177,12 +177,14 @@ class Db:
             count = 0
             for message in row:
                 message_content = message[0]
+                if len(message_content) == 0:
+                    continue
+                
                 num_curses = self.language.number_of_curse_words(message_content)
                 num_really_bad_curses = self.language.number_of_really_bad_curse_words(message_content)
                 count += 1
-                if len(message_content) == 0:
-                    continue
                 elo += curse_calc(len(message_content), num_curses, num_really_bad_curses)
+
             if count == 0:
                 return 0
             
@@ -192,7 +194,9 @@ class Db:
             # 1 spam every 100 messages allowed
             if num_spams > 0:
                 num_messages_between_spams = count / max(1, num_spams)
-                spam_penalty = max(0, 1 - self.config.config["elo"]["spam_multiplier"] * max(0, 1 - num_messages_between_spams / 100))
+                # Linear penalty because before there were crazy drop offs
+                spam_ratio = min(1.0, num_messages_between_spams / 100)
+                spam_penalty = max(0.1, 1.0 - (1.0 - spam_ratio) * self.config.config["elo"]["spam_multiplier"])
                 elo_avg *= spam_penalty
 
             num_warnings = await self.get_number_of_warnings(user_id)
