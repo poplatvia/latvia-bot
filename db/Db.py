@@ -1,5 +1,6 @@
 import aiosqlite
 from datetime import datetime, timedelta
+import math
 
 class Db:
     _instance = None
@@ -203,6 +204,10 @@ class Db:
             warning_penalty = num_warnings * self.config.config["elo"]["warning_multiplier"]
             elo_avg = max(0, elo_avg - warning_penalty)
 
+            time_since_first_message_in_seconds = await self.time_since_first_message(user_id)
+            max_possible_elo = lambda x: 100 * (1-(pow(math.e, -0.000005*x)))
+            elo_avg = elo_avg*(max_possible_elo(time_since_first_message_in_seconds)/100)
+
             return round(elo_avg, 2)
         
     async def time_since_first_message(self, user_id):
@@ -210,11 +215,11 @@ class Db:
             cursor = await db.execute('SELECT created_at FROM messages WHERE user_id = ? ORDER BY created_at ASC LIMIT 1', (str(user_id),))
             row = await cursor.fetchone()
             if row is None:
-                return datetime.now() - datetime.now()  # If user has no messages, return 0 time
+                return 0  # If user has no messages, return 0 time
             first_message_time = row[0]
             first_message_time = datetime.strptime(first_message_time, "%Y-%m-%d %H:%M:%S")
-            return datetime.now() - first_message_time
-
+            return int((datetime.now() - first_message_time).total_seconds())
+        
     async def number_of_spams(self, user_id):
         # 3 messages sent within 0.8 of each other
         async with aiosqlite.connect(self.db_name) as db:

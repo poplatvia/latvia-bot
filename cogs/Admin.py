@@ -2,6 +2,7 @@ import nextcord
 from nextcord.ext import commands
 import sys
 from db.Db import Db
+from typing import Any
 
 class AdminCommands(commands.Cog):
     def __init__(self, bot, db, config):
@@ -108,3 +109,27 @@ class AdminCommands(commands.Cog):
             return
         self.conf.reset_config()
         await ctx.response.send_message("Config reset to default.", ephemeral=True)
+
+    @nextcord.slash_command(name="execute", description="(Admin command) Execute a database function.")
+    async def execute(self, ctx, function: str, arg: str):
+        if ctx.user.id not in self.conf.config["admins"]:
+            await ctx.response.send_message("Admins only.", ephemeral=True)
+            return
+        
+        str_function: dict[str, (callable, Any)] = {
+            "get_number_of_warnings": [self.db.get_number_of_warnings, int(arg)],
+            "get_warnings": [self.db.get_warnings, int(arg)],
+            "time_since_first_message": [self.db.time_since_first_message, int(arg)],
+            "raw_sql": [self.db.raw_sql, str(arg)]
+        }
+
+        if function not in str_function:
+            await ctx.response.send_message("Function not found.", ephemeral=True)
+            return
+
+        try:
+            result = await str_function[function][0](str_function[function][1])
+            await ctx.response.send_message(f"Result: {result}", ephemeral=True)
+        except Exception as e:
+            await ctx.response.send_message(f"Error: {e}", ephemeral=True)
+        
