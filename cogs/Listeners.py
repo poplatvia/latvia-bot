@@ -35,6 +35,8 @@ class Listeners(commands.Cog):
         if self.language.contains_really_bad_language(message.content):
             await message.delete()
             await message.channel.send(f"⚠️ {message.author.mention}, your message contained inappropriate language and has been removed.", delete_after=5)
+        elif self.language.contains_curse_words(message.content):
+            await message.channel.send(f"⚠️ {message.author.mention}, watch your language!", delete_after=5)
 
         print(f"Processed message from {message.author}: {message.content}")
 

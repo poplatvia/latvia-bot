@@ -22,9 +22,14 @@ class Language:
     }
 
     def __init__(self):
-        self.curse_words = []
+        self.curse_patterns = []
         with open("resources/curse_words.txt", "r", encoding="utf-8") as f:
-            self.curse_words = [line.strip() for line in f.readlines()]
+            raw_words = [line.strip() for line in f.readlines()]
+            for word in raw_words:
+                if not word: continue
+                # Generate regex for each word
+                pattern_str = self.get_regex_for_word(word)
+                self.curse_patterns.append(re.compile(pattern_str, re.IGNORECASE))
 
         self.really_bad_patterns = []
         with open("resources/really_bad_curse_words.txt", "r", encoding="utf-8") as f:
@@ -55,7 +60,13 @@ class Language:
         return pattern
 
     def number_of_curse_words(self, text) -> int:
-        return sum(text.lower().count(curse_word) for curse_word in self.curse_words)
+        count = 0
+        for pattern in self.curse_patterns:
+            matches = pattern.findall(text)
+            for match in matches:
+                 if not self.is_whitelisted(match, text):
+                    count += 1
+        return count
 
     def number_of_really_bad_curse_words(self, text) -> int:
         # This count might be less accurate with regex, but we can try to find all matches
@@ -68,7 +79,10 @@ class Language:
         return count
 
     def contains_curse_words(self, text) -> bool:
-        return any(curse_word in text.lower() for curse_word in self.curse_words)
+        for pattern in self.curse_patterns:
+            if pattern.search(text):
+                return True
+        return False
 
     def contains_really_bad_language(self, text) -> bool:
         for pattern in self.really_bad_patterns:
