@@ -21,10 +21,9 @@ class DemocracyCommands(commands.Cog):
             # await ctx.send("❌ You cannot votekick yourself!")
             # return
 
-        time_since_first_message = await self.db.time_since_first_message(ctx.user.id)
-        if time_since_first_message < timedelta(days=1).total_seconds():
-            print(f"User {ctx.user.id} tried to start a votekick but has only been active for {time_since_first_message}.")
-            await ctx.send(f"⚠️ {ctx.user.mention}, you need to have been active for at least a day to participate in votekicks.", delete_after=5)
+        elo = await self.db.calculate_elo(ctx.user.id)
+        if elo < 50 and ctx.user.id not in self.config.config["admins"]:
+            await ctx.send(f"⚠️ {ctx.user.mention}, you need to have at least 50 elo to start a votekick.", delete_after=5)
             return
 
         if member.id in self.config.config["admins"]:
@@ -44,13 +43,13 @@ class DemocracyCommands(commands.Cog):
         await self.db.add_votekick(member.id, ctx.user.id)
 
         defendants_elo = await self.db.calculate_elo(member.id)
-        # If user has perfect elo, number of votes needed is 20.
-        num_votes_needed = max(3, int(defendants_elo/5))
+        # If user has a near-perfect elo, number of votes needed is 20.
+        num_votes_needed = max(3, int(round(defendants_elo/5, 0)))
         
         # Create the votekick message
         embed = nextcord.Embed(
             title="🗳️ VOTEKICK IN PROGRESS",
-            description=f"**Votekick against:** {member.mention}\n\n**Requirement:** {num_votes_needed} reactions to kick",
+            description=f"**Votekick against:** {member.mention}\nStarted by {ctx.user.mention}\n\n**Requirement:** {num_votes_needed} reactions to kick",
             color=nextcord.Color.red()
         )
         embed.add_field(name="Started by", value=ctx.user.mention, inline=False)
