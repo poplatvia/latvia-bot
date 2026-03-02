@@ -36,3 +36,13 @@ class Craftprobe(commands.Cog):
         else:
             await ctx.followup.send(f"❌ Server {server_ip} is not in the database.")
 
+    @craftprobe.subcommand(name="preprocess", description="Preprocess the database. This will remove all invalid minecraft usernames.")
+    async def preprocess(self, ctx):
+        if ctx.user.id not in self.config.config["admins"]:
+            await ctx.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+        
+        await ctx.response.defer(ephemeral=True)
+        await self.db.preprocess()
+        await ctx.followup.send("✅ Database preprocessed.")
+

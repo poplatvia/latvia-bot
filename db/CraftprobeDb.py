@@ -24,6 +24,12 @@ class CraftprobeDb:
                 pass
         except FileNotFoundError:
             raise Exception(f"Craftprobe database not found.")
+        
+    # preprocessing. Remove all invalid minecraft usernames.
+    async def preprocess(self):
+        async with aiosqlite.connect(self.db_name) as db:
+            await db.execute('DELETE FROM playername_uuid WHERE player_name NOT GLOB "[a-zA-Z0-9_]*" or length(player_name) < 3 or length(player_name) > 16')
+            await db.commit()
 
     async def is_player_seen(self, username) -> bool:
         username = username.lower()
