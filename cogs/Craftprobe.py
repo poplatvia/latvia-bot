@@ -21,9 +21,11 @@ class Craftprobe(commands.Cog):
     @seen.subcommand(name="player", description="Check if player has been seen.")
     async def player(self, ctx: nextcord.Interaction, username: str):
         await ctx.response.defer()
-        seen = await self.db.is_player_seen(username)
-        if seen:
-            await ctx.followup.send(f"✅ Player {username} is in the database.")
+        timestamps = await self.db.when_was_player_seen(username)
+        
+        if timestamps is not None:
+            timestamps_str = "\n".join([timestamp.strftime("%Y-%m-%d %H:%M:%S") for timestamp in timestamps])
+            await ctx.followup.send(f"✅ Player {username} is in the database.\nTimes seen at (UTC):\n{timestamps_str}")
         else:
             await ctx.followup.send(f"❌ Player {username} is not in the database.")
 
