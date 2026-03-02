@@ -133,6 +133,12 @@ class Db:
             cursor = await db.execute('SELECT reason, issuer, created_at FROM warnings WHERE user_id = ?', (str(user),))
             row = await cursor.fetchall()
             return row
+        
+    async def get_top_warnings(self):
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT user_id, COUNT(*) as warning_count FROM warnings GROUP BY user_id ORDER BY warning_count DESC LIMIT 10')
+            row = await cursor.fetchall()
+            return row
 
     # -------------- User Statistics -------------- #
 
