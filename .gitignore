@@ -226,3 +226,6 @@ deploy.sh
 
 config.json
 /config.json
+
+*.sqlite3-shm
+*.sqlite3-wal

@@ -5,7 +5,9 @@ from cogs.Listeners import Listeners
 from cogs.Democracy import DemocracyCommands
 from cogs.General import GeneralCommands
 from cogs.Routines import Routines
+from db.CraftprobeDb import CraftprobeDb
 from db.Db import Db
+from cogs.Craftprobe import Craftprobe
 from utils.Language import Language
 from Config import Config
 
@@ -22,6 +24,7 @@ config = Config()
 
 language: Language = Language()
 db: Db = Db(language, config)
+craftprobe_db: CraftprobeDb = CraftprobeDb(config)
 
 client.add_cog(AdminCommands(client, db, config))
 client.add_cog(ModerationCommands(client, db, config))
@@ -29,5 +32,6 @@ client.add_cog(DemocracyCommands(client, db, config))
 client.add_cog(Listeners(client, db, language, config))
 client.add_cog(GeneralCommands(client, db, config))
 client.add_cog(Routines(client, db, config))
+client.add_cog(Craftprobe(client, craftprobe_db, config))
 
 client.run(open("token.txt", 'r').readline().replace("\n", ""))
