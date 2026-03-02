@@ -134,3 +134,17 @@ class ModerationCommands(commands.Cog):
             await ctx.response.send_message("User not found.")
         except Exception as e:
             await ctx.response.send_message(f"Error: {e}")
+
+    @nextcord.slash_command(name="purge", description="(Admin command) Delete a specific amount of messages.")
+    async def purge(self, ctx: nextcord.Interaction, amount: int):
+        if (ctx.user.id in self.config.config["admins"] or 
+            ctx.user.guild_permissions.manage_messages or 
+            ctx.user.guild_permissions.moderate_members):
+            
+            await ctx.response.defer(ephemeral=True)
+
+            deleted = await ctx.channel.purge(limit=amount)
+
+            await ctx.followup.send(f"🗑️ Veiksmīgi izdzēsti {len(deleted)} ziņojumi.")
+        else:
+            await ctx.response.send_message("Jums nav atļaujas dzēst ziņojumus!", ephemeral=True)
