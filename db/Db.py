@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import aiosqlite
 from datetime import datetime, timedelta
 import math
@@ -167,7 +169,36 @@ class Db:
             ''', (str(target_user_id), str(started_by)))
             await db.commit()
 
-    # -------------- Elo -------------- #
+    # -------------- Elo -------------- #ˇ
+    # Return curse, slur count
+    async def get_curse_count(self, user_id) -> Tuple[int, int]:
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT message_content FROM messages WHERE user_id = ?', (str(user_id),))
+            row = await cursor.fetchall()
+            curse_count = 0
+            slur_count = 0
+            for message in row:
+                message_content = message[0]
+                curse_count += self.language.number_of_curse_words(message_content)
+                slur_count += self.language.number_of_really_bad_curse_words(message_content)
+            return curse_count, slur_count
+    
+    async def get_top_curse_users(self, n=10) -> list[Tuple[int, int, int]]:
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT user_id, message_content FROM messages')
+            row = await cursor.fetchall()
+            user_curse_counts = {}
+            user_slur_counts = {}
+            for message in row:
+                user_id = message[0]
+                message_content = message[1]
+                curse_count = self.language.number_of_curse_words(message_content)
+                slur_count = self.language.number_of_really_bad_curse_words(message_content)
+                user_curse_counts[user_id] = user_curse_counts.get(user_id, 0) + curse_count
+                user_slur_counts[user_id] = user_slur_counts.get(user_id, 0) + slur_count
+            top_users = sorted(user_curse_counts.items(), key=lambda x: x[1], reverse=True)[:n]
+            return [(user_id, curse_count, user_slur_counts.get(user_id, 0)) for user_id, curse_count in top_users]
+
     async def calculate_elo(self, user_id):
         """
         User's elo is calculated based on the number of messages, 

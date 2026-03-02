@@ -66,6 +66,31 @@ class GeneralCommands(commands.Cog):
         
         await ctx.send(f"{user.mention} has {len(warnings)} warning(s).\n{reasons_str}")
 
+    @nextcord.slash_command(name="curse", description="Various curse-related commands.")
+    @bot_channel_only()
+    async def curse(self, ctx):
+        pass
+
+    @curse.subcommand(name="count", description="Count curse words for a user.")
+    async def count(self, ctx, user: nextcord.User):
+        curse_count, slur_count = await self.db.get_curse_count(user.id)
+        await ctx.send(f"{user.mention} has used {curse_count} curse word(s) and {slur_count} slur(s).")
+
+    @curse.subcommand(name="top", description="Show the top 10 users with the most curse words.")
+    async def top(self, ctx):
+        top_curses = await self.db.get_top_curse_users()
+        if not top_curses:
+            await ctx.send("No curse words found.")
+            return
+    
+        embed = nextcord.Embed(title="Top 10 Users with Most Curse Words", color=nextcord.Color.dark_red())
+        for user_id, curse_count, slur_count in top_curses:
+            user = self.bot.get_user(user_id)
+            username = user.name if user else f"User ID {user_id}"
+            embed.add_field(name=f"{username}", value=f"{curse_count} curse word(s) and {slur_count} slur(s)", inline=False)
+
+        await ctx.send(embed=embed)
+
     @nextcord.slash_command(name="leaderboard", description="Show the elo leaderboard.")
     @bot_channel_only()
     async def leaderboard(self, ctx):
