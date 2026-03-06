@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import List, Tuple
 
 import aiosqlite
 from datetime import datetime, timedelta
@@ -245,6 +245,19 @@ class Db:
             max_possible_elo = lambda x: 100 * (1-(pow(math.e, -0.000005*x)))
             elo_avg = elo_avg*(max_possible_elo(time_since_first_message_in_seconds)/100)
 
+            time_since_last_message_in_seconds = await self.time_since_last_message(user_id)
+            # every day of inactivity reduces elo by 10%
+            inactivity_penalty = pow(0.9, time_since_last_message_in_seconds / 86400)
+            elo_avg *= inactivity_penalty
+
+            gaps = await self.get_message_gaps(user_id, 3)
+            # every gap of 3 days reduces elo by 5%, every gap of 7 days reduces elo by 30%
+            for gap in gaps:
+                if gap >= 7:
+                    elo_avg *= 0.7
+                elif gap >= 3:
+                    elo_avg *= 0.95
+
             return round(elo_avg, 2)
         
     async def time_since_first_message(self, user_id):
@@ -256,6 +269,28 @@ class Db:
             first_message_time = row[0]
             first_message_time = datetime.strptime(first_message_time, "%Y-%m-%d %H:%M:%S")
             return int((datetime.now() - first_message_time).total_seconds())
+    
+    async def time_since_last_message(self, user_id):
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT created_at FROM messages WHERE user_id = ? ORDER BY created_at DESC LIMIT 1', (str(user_id),))
+            row = await cursor.fetchone()
+            if row is None:
+                return 0  # If user has no messages, return 0 time
+            last_message_time = row[0]
+            last_message_time = datetime.strptime(last_message_time, "%Y-%m-%d %H:%M:%S")
+            return int((datetime.now() - last_message_time).total_seconds())
+        
+    async def get_message_gaps(self, user_id, days) -> List[int]:
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT created_at FROM messages WHERE user_id = ? ORDER BY created_at ASC', (str(user_id),))
+            row = await cursor.fetchall()
+            message_times = [datetime.strptime(message[0], "%Y-%m-%d %H:%M:%S") for message in row]
+            gaps = []
+            for i in range(1, len(message_times)):
+                gap = (message_times[i] - message_times[i-1]).total_seconds() / 86400
+                if gap >= days:
+                    gaps.append(gap)
+            return gaps
         
     async def number_of_spams(self, user_id):
         # 3 messages sent within 0.8 of each other
