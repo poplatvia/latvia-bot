@@ -5,7 +5,7 @@ class AI:
     def __init__(self, db, config):
         self.db = db
         self.config = config
-        self.model_name = "qwen3.5:4b"
+        self.model_name = "qwen3.5:0.8b"
 
         self.history: dict[int, list] = {}
 
