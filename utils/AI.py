@@ -56,10 +56,13 @@ class AI:
                     ],
                     temperature=0.75, # Slightly higher temperature helps with mimicry
                 )
+                print(response)
+                self.is_generating = False
                 return response.choices[0].message.content
             
             except GroqError as e:
                 print(self.keys)
+                print(e)
                 self.dead_keys.append(client.api_key)
                 self.keys.remove(client.api_key)
 
