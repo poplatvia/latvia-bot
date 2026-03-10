@@ -1,3 +1,5 @@
+import asyncio
+
 import nextcord
 from nextcord.ext import commands
 from db.Db import Db
@@ -41,10 +43,19 @@ class Listeners(commands.Cog):
         
         print(f"Processed message from {message.author}: {message.content}")
 
-        if random.random() < 0.1 and message.content.split("?") != [message.content]:
-            print("Asking AI to reply with replicated speech...")
+        if random.random() < 0.1 and "?" in message.content:        
+            loop = asyncio.get_event_loop()
             all_messages = await self.db.get_all_messages()
-            r = self.ai.reply_with_replicated_speech(message.content, all_messages)
+
+            async with message.channel.typing():
+                r = await loop.run_in_executor(
+                    None, 
+                    self.ai.reply_with_replicated_speech, 
+                    message.content, 
+                    all_messages
+                )
+
+            print("Finished AI response.")
 
             await message.channel.send(f"{r}")
 
