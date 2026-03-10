@@ -44,7 +44,7 @@ class Listeners(commands.Cog):
         is_english = self.language.is_english(message.content)
         print(f"Processed {'English' if is_english else 'Non-English'} message from {message.author}: {message.content}")
 
-        if random.random() < 0.2 and "?" in message.content:        
+        if random.random() < 0.2 and "?" in message.content and is_english:        
             loop = asyncio.get_event_loop()
             all_messages = await self.db.get_all_messages()
             all_messages = random.sample(all_messages, min(500, len(all_messages)))
