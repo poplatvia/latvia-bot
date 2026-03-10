@@ -55,7 +55,7 @@ class Listeners(commands.Cog):
             await message.delete()
             return
 
-        if random.random() < 0.99 and "?" in message.content and is_english:        
+        if (random.random() < 0.1 or message.author.id in self.config.config["admins"]) and "?" in message.content and is_english:        
             loop = asyncio.get_event_loop()
             all_messages = await self.db.get_all_prompt_messages()
             all_messages = random.sample(all_messages, min(500, len(all_messages)))
