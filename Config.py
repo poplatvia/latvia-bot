@@ -1,5 +1,4 @@
 import json
-import os
 
 class Config:
     _instance = None
@@ -39,5 +38,6 @@ class Config:
             json.dump(example_config, f, indent=4)
         self.config = example_config
     
-    def __del__(self):
-        self.write_config()
+    # You should not be doing this. It will be commented out for now.
+    # def __del__(self):
+    #    self.write_config()

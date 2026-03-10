@@ -1,13 +1,12 @@
 import nextcord
 from nextcord.ext import commands
 from db.Db import Db
-from utils.Language import Language
 
 class Listeners(commands.Cog):
     def __init__(self, bot, db, language, config):
         self.bot = bot
         self.db: Db = db
-        self.language: Language = language
+        self.language = language
         self.config = config
 
     @commands.Cog.listener()
