@@ -7,6 +7,8 @@ class AI:
         self.config = config
         self.model_name = "qwen3.5:0.8b"
 
+        self.is_generating = False
+
         self.history: dict[int, list] = {}
 
     def ask(self, question):
@@ -20,8 +22,10 @@ class AI:
     
     # Input list of messages, output response in the style of those messages. This is for replicating speech patterns of users.
     def reply_with_replicated_speech(self, prompt, messages):
-        # random 1000 messages
-        messages = random.sample(messages, min(1000, len(messages)))
+        if self.is_generating:
+            return "Please wait a moment."
+
+        self.is_generating = True
 
         system_instruction1 = {
             "role": "system", 

@@ -46,6 +46,7 @@ class Listeners(commands.Cog):
         if random.random() < 0.1 and "?" in message.content:        
             loop = asyncio.get_event_loop()
             all_messages = await self.db.get_all_messages()
+            all_messages = random.sample(all_messages, min(500, len(all_messages)))
 
             async with message.channel.typing():
                 r = await loop.run_in_executor(
