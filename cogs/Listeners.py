@@ -41,7 +41,8 @@ class Listeners(commands.Cog):
         elif self.language.contains_curse_words(message.content):
             await message.channel.send(f"⚠️ {message.author.mention}, watch your language!", delete_after=5)
         
-        print(f"Processed message from {message.author}: {message.content}")
+        is_english = self.language.is_english(message.content)
+        print(f"Processed {'English' if is_english else 'Non-English'} message from {message.author}: {message.content}")
 
         if random.random() < 0.2 and "?" in message.content:        
             loop = asyncio.get_event_loop()

@@ -1,4 +1,4 @@
-import os
+import re
 from groq import Groq
 
 class AI:
@@ -36,7 +36,7 @@ class AI:
             system_instruction = (
                 f"You must reply to the user using the exact style of the following messages. "
                 f"Replicate the speech patterns, tone, vocabulary, and quirkiness of these examples:\n\n{messages}\n\n"
-                f"RULES: 1 paragraph max. No formatting. No 'As an AI'. Just the response."
+                f"RULES: 1 paragraph max. No formatting. No 'As an AI'. Just the response. SPEAK ONLY IN ENGLISH NO MATTER WHAT. If the question is not clear, ask for clarification instead of making assumptions."
             )
 
             response = self.client.chat.completions.create(
@@ -45,7 +45,7 @@ class AI:
                     {"role": "system", "content": system_instruction},
                     {"role": "user", "content": str(prompt)},
                 ],
-                temperature=0.8, # Slightly higher temperature helps with mimicry
+                temperature=0.6, # Slightly higher temperature helps with mimicry
             )
             return response.choices[0].message.content
         finally:

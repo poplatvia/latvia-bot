@@ -40,6 +40,11 @@ class Language:
                 pattern_str = self.get_regex_for_word(word)
                 self.really_bad_patterns.append(re.compile(pattern_str, re.IGNORECASE))
 
+    @staticmethod
+    def is_english(text):
+        pattern = r'^[a-zA-Z0-9\s\.,!@#$%^&*()_+-=\[\]{};:\'"<>/?\\|`~]*$'
+        return bool(re.match(pattern, text))
+
     def get_regex_for_word(self, word: str) -> str:
         """
         Generates a regex pattern for a given word that allows for:
