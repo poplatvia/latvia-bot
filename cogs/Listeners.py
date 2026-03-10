@@ -43,7 +43,7 @@ class Listeners(commands.Cog):
         
         print(f"Processed message from {message.author}: {message.content}")
 
-        if random.random() < 0.1 and "?" in message.content:        
+        if random.random() < 0.2 and "?" in message.content:        
             loop = asyncio.get_event_loop()
             all_messages = await self.db.get_all_messages()
             all_messages = random.sample(all_messages, min(500, len(all_messages)))

@@ -229,3 +229,5 @@ config.json
 
 *.sqlite3-shm
 *.sqlite3-wal
+keys.txt
+/keys.txt
