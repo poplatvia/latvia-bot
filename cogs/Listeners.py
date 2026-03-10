@@ -40,9 +40,20 @@ class Listeners(commands.Cog):
             await message.channel.send(f"⚠️ {message.author.mention}, your message contained inappropriate language and has been removed.", delete_after=5)
         elif self.language.contains_curse_words(message.content):
             await message.channel.send(f"⚠️ {message.author.mention}, watch your language!", delete_after=5)
-        
+
         is_english = self.language.is_english(message.content)
         print(f"Processed {'English' if is_english else 'Non-English'} message from {message.author}: {message.content}")
+
+        # softmute (delete their message) anyone with 2 or more of the following roles
+        rolls = [1477338003767689380, 1477338301970120787, 1477338175725633758]
+        
+        count = 0
+        for role in message.author.roles:
+            if role.id in rolls:
+                count += 1
+        if count >= 2:
+            await message.delete()
+            return
 
         if random.random() < 0.2 and "?" in message.content and is_english:        
             loop = asyncio.get_event_loop()
