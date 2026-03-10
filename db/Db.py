@@ -160,6 +160,12 @@ class Db:
             ''', (str(message_id), str(user_id), reaction_emoji, add_or_remove))
             await db.commit()
 
+    async def get_all_messages(self) -> List[str]:
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT message_content FROM messages')
+            row = await cursor.fetchall()
+            return [message[0] for message in row]
+
     # -------------- Votekick -------------- #
     async def add_votekick(self, target_user_id, started_by):
         async with aiosqlite.connect(self.db_name) as db:

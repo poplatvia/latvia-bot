@@ -1,12 +1,14 @@
 import nextcord
 from nextcord.ext import commands
 from db.Db import Db
+import random
 
 class Listeners(commands.Cog):
-    def __init__(self, bot, db, language, config):
+    def __init__(self, bot, db, language, ai, config):
         self.bot = bot
         self.db: Db = db
         self.language = language
+        self.ai = ai
         self.config = config
 
     @commands.Cog.listener()
@@ -36,8 +38,15 @@ class Listeners(commands.Cog):
             await message.channel.send(f"⚠️ {message.author.mention}, your message contained inappropriate language and has been removed.", delete_after=5)
         elif self.language.contains_curse_words(message.content):
             await message.channel.send(f"⚠️ {message.author.mention}, watch your language!", delete_after=5)
-
+        
         print(f"Processed message from {message.author}: {message.content}")
+
+        if random.random() < 0.1 and message.content.split("?") != [message.content]:
+            print("Asking AI to reply with replicated speech...")
+            all_messages = await self.db.get_all_messages()
+            r = self.ai.reply_with_replicated_speech(message.content, all_messages)
+
+            await message.channel.send(f"{r}")
 
     async def cog_unload(self):
         await self.db.close()

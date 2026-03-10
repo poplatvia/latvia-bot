@@ -9,6 +9,7 @@ from db.CraftprobeDb import CraftprobeDb
 from db.Db import Db
 from cogs.Craftprobe import Craftprobe
 from utils.Language import Language
+from utils.AI import AI
 from Config import Config
 
 intents = nextcord.Intents.all()
@@ -24,12 +25,13 @@ config = Config()
 
 language: Language = Language()
 db: Db = Db(language, config)
+ai: AI = AI(db, config)
 craftprobe_db: CraftprobeDb = CraftprobeDb(config)
 
 client.add_cog(AdminCommands(client, db, config))
 client.add_cog(ModerationCommands(client, db, config))
 client.add_cog(DemocracyCommands(client, db, config))
-client.add_cog(Listeners(client, db, language, config))
+client.add_cog(Listeners(client, db, language, ai, config))
 client.add_cog(GeneralCommands(client, db, config))
 client.add_cog(Routines(client, db, config))
 client.add_cog(Craftprobe(client, craftprobe_db, config))
