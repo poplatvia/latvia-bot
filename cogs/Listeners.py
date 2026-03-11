@@ -58,7 +58,12 @@ class Listeners(commands.Cog):
         if (random.random() < 0.1 or message.author.id in self.config.config["admins"]) and "?" in message.content and is_english:        
             loop = asyncio.get_event_loop()
             all_messages = await self.db.get_all_messages_by_user(message.author.id)
-            print(all_messages)
+            
+            # remove all empty
+            all_messages = [m for m in all_messages if m.strip() != ""]
+            # remove all links
+            all_messages = [m for m in all_messages if "http" not in m]
+            # sample at most 400 messages if there are more than that
             all_messages = random.sample(all_messages, min(400, len(all_messages)))
 
             async with message.channel.typing():
