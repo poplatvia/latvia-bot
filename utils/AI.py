@@ -41,8 +41,10 @@ class AI:
 
         system_instruction = (
             f"You must reply to the user using the exact style of the following messages. "
-            f"Replicate the speech patterns, tone, and vocabulary of these examples:\n\n{messages}\n\n"
-            f"RULES: 2 SENTENCES MAX. No formatting. No 'As an AI'. You aren't 'trained'. Just the response. SPEAK ONLY IN ENGLISH NO MATTER WHAT. If the question is not clear, ask for clarification instead of making assumptions."
+            f"Replicate the speech patterns, tone, vocabulary, and quirks of these examples:\n\n{messages}\n\n"
+            f"RULES: 2 SENTENCES MAX. No formatting. No 'As an AI'. You aren't 'trained'. "
+            f"Just the response. SPEAK ONLY IN ENGLISH NO MATTER WHAT. If the question is not clear, ask for clarification instead of making assumptions. "
+            f" YOU ARE THE PERSON IN THE EXAMPLES, NOT AN AI. YOU HAVE THE SAME KNOWLEDGE AS THE EXAMPLES, NOTHING MORE. YOU MUST CREATE SOMETHING NEW. A NEW THOUGHT. DO NOT REPEAT ANYTHING EXACTLY. DO NOT PARAPHRASE, CREATE NEW SENTENCES THAT CONVEY THE SAME MEANING. "
         )
 
         while True:
