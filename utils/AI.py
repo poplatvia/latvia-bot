@@ -25,6 +25,18 @@ class AI:
         client = Groq(api_key=key)
         return client
 
+    # limit max_len messages
+    def insert_message(self, user_id, content, max_len=10):
+        if user_id not in self.history:
+            self.history[user_id] = []
+        
+        self.history[user_id].append({'role': 'user', 'content': str(content)})
+        
+        if len(self.history[user_id]) > max_len:
+            self.history[user_id] = self.history[user_id][-max_len:]
+
+        print(self.history[user_id])
+
     def ask(self, question):
         response = self.__get_client().chat.completions.create(
             model=self.model_name,
@@ -32,7 +44,7 @@ class AI:
         )
         return response.choices[0].message.content
 
-    def reply_with_replicated_speech(self, prompt, messages):
+    def reply_with_replicated_speech(self, prompt, messages, extra_instructions=""):
         if self.is_generating:
             return "Please wait a moment."
 
@@ -49,16 +61,17 @@ class AI:
 
         while True:
             client = self.__get_client()
+
             try:
                 response = client.chat.completions.create(
                     model=self.model_name,
                     messages=[
                         {"role": "system", "content": system_instruction},
+                        {"role": "system", "content": extra_instructions},
                         {"role": "user", "content": str(prompt)},
                     ],
-                    temperature=0.75, # Slightly higher temperature helps with mimicry
+                    temperature=0.9, # Slightly higher temperature helps with mimicry
                 )
-                print(response)
                 self.is_generating = False
                 return response.choices[0].message.content
             
@@ -73,24 +86,56 @@ class AI:
                     break
 
         self.is_generating = False
-        return "I literally CANNOT think right now ughhh"
+        return "Your question is stupid and as a consequence I refuse to answer it."
 
-    def ask_with_history(self, user_id, question):
+    def ask_with_history(self, user_id, question, context: list[str]):
+
+        if self.is_generating:
+            return "Please wait a moment."
+
+        self.is_generating = True
+        
+
+        system_instruction = (
+            f"You must reply to the user factually extrapolating from statements made by the server owner. "
+            f"The messages by the server owner are the following:\n\n{context}\n\n"
+            f"RULES: 2 SENTENCES MAX. No formatting. No 'As an AI'. You aren't 'trained'. "
+            f"Do not mention 'AI' or 'as an AI' in your response. Just the response. If the question is not clear, ask for clarification instead of making assumptions."
+            f" Speak only English and be very stern and factual."
+        )
+
         if user_id not in self.history:
             self.history[user_id] = []
 
         self.history[user_id].append({'role': 'user', 'content': str(question)})
-        
-        if len(self.history[user_id]) > 10:
-            self.history[user_id] = self.history[user_id][-10:]
 
-        response = self.__get_client().chat.completions.create(
-            model=self.model_name,
-            messages=self.history[user_id]
-        )
-        
-        answer = response.choices[0].message.content
-        
-        self.history[user_id].append({'role': 'assistant', 'content': answer})
-        
-        return answer
+        while True:
+            client = self.__get_client()
+
+            try:
+                response = client.chat.completions.create(
+                    model=self.model_name,
+                    messages=[
+                        {"role": "system", "content": system_instruction},
+                        *self.history[user_id],
+                        {"role": "user", "content": str(question)},
+                    ],
+                    temperature=0.6, # Slightly lower temperature for factuality
+                )
+                self.is_generating = False
+                answer = response.choices[0].message.content
+                self.history[user_id].append({'role': 'assistant', 'content': answer})
+                return answer
+            
+            except GroqError as e:
+                print(self.keys)
+                print(e)
+                self.dead_keys.append(client.api_key)
+                self.keys.remove(client.api_key)
+
+                if not self.keys:
+                    self.keys = self.dead_keys
+                    break
+
+        self.is_generating = False
+        return "Your question is stupid and as a consequence I refuse to answer it."

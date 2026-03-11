@@ -160,10 +160,10 @@ class Db:
             ''', (str(message_id), str(user_id), reaction_emoji, add_or_remove))
             await db.commit()
 
-    async def get_all_prompt_messages(self) -> List[str]:
+    async def get_all_prompt_messages(self, min_length: int = 50) -> List[str]:
         async with aiosqlite.connect(self.db_name) as db:
-            # where there is no question mark in message_content and longer than 20 characters, and not null
-            cursor = await db.execute('SELECT message_content FROM messages WHERE message_content NOT LIKE "%?%" AND LENGTH(message_content) > 20 AND message_content IS NOT NULL')
+            # where there is no question mark in message_content and longer than min_length characters, and not null
+            cursor = await db.execute('SELECT message_content FROM messages WHERE message_content NOT LIKE "%?%" AND LENGTH(message_content) > ? AND message_content IS NOT NULL', (min_length,))
             row = await cursor.fetchall()
             return [message[0] for message in row]
     
