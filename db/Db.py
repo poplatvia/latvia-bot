@@ -166,6 +166,12 @@ class Db:
             cursor = await db.execute('SELECT message_content FROM messages WHERE message_content NOT LIKE "%?%" AND LENGTH(message_content) > 20 AND message_content IS NOT NULL')
             row = await cursor.fetchall()
             return [message[0] for message in row]
+    
+    async def get_all_messages_by_user(self, user_id) -> List[str]:
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT message_content FROM messages WHERE message_content NOT LIKE "%?%" AND user_id = ? AND message_content IS NOT NULL', (str(user_id),))
+            row = await cursor.fetchall()
+            return [message[0] for message in row]
 
     # -------------- Votekick -------------- #
     async def add_votekick(self, target_user_id, started_by):
