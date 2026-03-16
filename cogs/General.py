@@ -5,10 +5,10 @@ from db.Db import Db
 from checks import bot_channel_only
 
 class GeneralCommands(commands.Cog):
-    def __init__(self, bot, db, config):
-        self.bot = bot
-        self.db = db
-        self.config = config
+    def __init__(self, context):
+        self.bot = context.client
+        self.db = context.db
+        self.config = context.config
 
     # Prevents ugly errors from printing
     # async def cog_application_command_error(self, interaction: nextcord.Interaction, error):

@@ -4,10 +4,10 @@ from db.CraftprobeDb import CraftprobeDb
 from checks import bot_channel_only
 
 class Craftprobe(commands.Cog):
-    def __init__(self, bot, db: CraftprobeDb, config):
-        self.bot = bot
-        self.db = db
-        self.config = config
+    def __init__(self, context):
+        self.bot = context.client
+        self.db = context.craftprobe_db
+        self.config = context.config
 
     @nextcord.slash_command(name="craftprobe", description="Various craftprobe commands.")
     @bot_channel_only()

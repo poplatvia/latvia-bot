@@ -5,11 +5,11 @@ from db.Db import Db
 from typing import Any
 
 class AdminCommands(commands.Cog):
-    def __init__(self, bot, db, config):
-        self.bot = bot
-        self.db = db
-        
-        self.conf = config
+    def __init__(self, context):
+        self.bot = context.client
+        self.db = context.db
+        self.csdb = context.csdb
+        self.conf = context.config
 
     @nextcord.slash_command(name="shutdown", description="(Admin command) Turn off the bot")
     async def shutdown(self, ctx):
@@ -28,6 +28,7 @@ class AdminCommands(commands.Cog):
     async def manual_db_start(self, ctx):
         if ctx.user.id in self.conf.config["admins"]:
             await self.db.initialize()
+            await self.csdb.initialize()
             await ctx.send("Started.")
 
     @nextcord.slash_command(name="sql", description="(Admin command) Mess with DB.")

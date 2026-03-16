@@ -2,10 +2,10 @@ from nextcord.ext import commands
 from nextcord.ext import commands, tasks
 
 class Routines(commands.Cog):
-    def __init__(self, bot, db, config):
-        self.bot = bot
-        self.db = db
-        self.config = config
+    def __init__(self, context):
+        self.bot = context.client
+        self.db = context.db
+        self.config = context.config
 
         self.leaderboard_task.start()
 

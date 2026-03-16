@@ -2,16 +2,15 @@ import asyncio
 
 import nextcord
 from nextcord.ext import commands
-from db.Db import Db
 import random
 
 class Listeners(commands.Cog):
-    def __init__(self, bot, db, language, ai, config):
-        self.bot = bot
-        self.db: Db = db
-        self.language = language
-        self.ai = ai
-        self.config = config
+    def __init__(self, context):
+        self.bot = context.client
+        self.db = context.db
+        self.language = context.language
+        self.ai = context.ai
+        self.config = context.config
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: nextcord.Reaction, user: nextcord.Member):

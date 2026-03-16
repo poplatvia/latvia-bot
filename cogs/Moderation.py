@@ -4,11 +4,10 @@ from db.Db import Db
 import datetime
 
 class ModerationCommands(commands.Cog):
-    def __init__(self, bot, db, config):
-        self.bot = bot
-        self.db = db
-        
-        self.config = config
+    def __init__(self, context):
+        self.bot = context.client
+        self.db = context.db
+        self.config = context.config
 
     @nextcord.slash_command(name="ban", description="(Admin command) Ban user.")
     async def ban(self, ctx, member: nextcord.Member, *, reason="No reason provided"):

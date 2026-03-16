@@ -4,12 +4,12 @@ import asyncio
 from datetime import datetime, timedelta
 
 class DemocracyCommands(commands.Cog):
-    def __init__(self, bot, db, config):
-        self.bot = bot
-        self.db = db
+    def __init__(self, context):
+        self.bot = context.client
+        self.db = context.db
         self.active_votes = {}  # active votekicks
-        self.config = config
-    
+        self.config = context.config
+
     @nextcord.slash_command(name="votekick", description="Votekick user.")
     @commands.has_permissions(send_messages=True)
     async def votekick(self, ctx, member: nextcord.Member):
