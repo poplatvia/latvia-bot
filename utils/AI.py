@@ -35,8 +35,6 @@ class AI:
         if len(self.history[user_id]) > max_len:
             self.history[user_id] = self.history[user_id][-max_len:]
 
-        print(self.history[user_id])
-
     def ask(self, question):
         response = self.__get_client().chat.completions.create(
             model=self.model_name,
@@ -76,8 +74,6 @@ class AI:
                 return response.choices[0].message.content
             
             except GroqError as e:
-                print(self.keys)
-                print(e)
                 self.dead_keys.append(client.api_key)
                 self.keys.remove(client.api_key)
 
@@ -128,8 +124,6 @@ class AI:
                 return answer
             
             except GroqError as e:
-                print(self.keys)
-                print(e)
                 self.dead_keys.append(client.api_key)
                 self.keys.remove(client.api_key)
 

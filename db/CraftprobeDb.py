@@ -14,8 +14,9 @@ class CraftprobeDb:
             cls._instance._initialized = False
         return cls._instance
 
-    def __init__(self, config, db_name="db.sqlite3") -> None:
+    def __init__(self, config, main_db_name: str, db_name="db.sqlite3") -> None:
         self.config = config
+        self.db = main_db_name
         self.db_name = db_name
 
         # check db exists
@@ -67,16 +68,26 @@ class CraftprobeDb:
         
     async def get_random_server(self, version: str=None) -> str | None:
         async with aiosqlite.connect(self.db_name) as db:
+            tagged_servers = set()
+            # very shotty fix
+            async with aiosqlite.connect(self.db) as bot_db:
+                cursor = await bot_db.execute('SELECT server_ip, port FROM tagged_servers')
+                rows = await cursor.fetchall()
+                tagged_servers = {f"{row[0]}:{row[1]}" for row in rows}
             if version:
                 # union the servers table with the players_seen table to get a random server that has been seen with the specified version
-                cursor = await db.execute('SELECT server_ip, port FROM servers WHERE server_version = ? AND sorted_tag = "unsorted" AND concat(server_ip, ":", port) IN (SELECT server FROM players_seen) ORDER BY RANDOM() LIMIT 1', (version,))
+                cursor = await db.execute('SELECT server_ip, port FROM servers WHERE server_version = ? AND sorted_tag = "unsorted" AND concat(server_ip, ":", port) IN (SELECT server FROM players_seen) ORDER BY RANDOM() LIMIT 10', (version,))
             else:
-                cursor = await db.execute('SELECT server_ip, port FROM servers WHERE sorted_tag = "unsorted" AND concat(server_ip, ":", port) IN (SELECT server FROM players_seen) ORDER BY RANDOM() LIMIT 1')
-            row = await cursor.fetchall()
-            if len(row) == 0:
-                return None
+                cursor = await db.execute('SELECT server_ip, port FROM servers WHERE sorted_tag = "unsorted" AND concat(server_ip, ":", port) IN (SELECT server FROM players_seen) ORDER BY RANDOM() LIMIT 10')
+            rows = await cursor.fetchall()
 
-            return f"{row[0][0]}:{row[0][1]}"
+            for row in rows:
+                server_address = f"{row[0]}:{row[1]}"
+                
+                if server_address not in tagged_servers:
+                    return server_address
+
+            return None
     
     async def mark_server_as_whitelisted(self, server_ip) -> bool:
         server = server_ip.split(":")[0]
