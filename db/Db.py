@@ -79,6 +79,31 @@ class Db:
                 '''
             )
 
+            await db.execute('CREATE TABLE IF NOT EXISTS fetched_servers (server_ip TEXT, port INTEGER, user_id INTEGER, last_updated TIMESTAMP, PRIMARY KEY (server_ip, port, user_id))')
+
+            await db.execute('CREATE TABLE IF NOT EXISTS tagged_servers (server_ip TEXT, port INTEGER, user_id INTEGER, tag TEXT, last_updated TIMESTAMP, PRIMARY KEY (server_ip, port, user_id))')
+
+            await db.commit()
+
+    async def insert_fetched_server(self, server_ip, user_id):
+        server = server_ip.split(":")[0]
+        port = server_ip.split(":")[1]
+        async with aiosqlite.connect(self.db_name) as db:
+            await db.execute('INSERT INTO fetched_servers (server_ip, port, user_id, last_updated) VALUES (?, ?, ?, ?)', (server, port, user_id, datetime.utcnow()))
+            await db.commit()
+
+    async def insert_whitelisted_server(self, server_ip, user_id):
+        server = server_ip.split(":")[0]
+        port = server_ip.split(":")[1]
+        async with aiosqlite.connect(self.db_name) as db:
+            await db.execute('INSERT INTO tagged_servers (server_ip, port, user_id, tag, last_updated) VALUES (?, ?, ?, ?, ?)', (server, port, user_id, "whitelisted", datetime.utcnow()))
+            await db.commit()
+
+    async def insert_tagged_server(self, server_ip, user_id, tag):
+        server = server_ip.split(":")[0]
+        port = server_ip.split(":")[1]
+        async with aiosqlite.connect(self.db_name) as db:
+            await db.execute('INSERT INTO tagged_servers (server_ip, port, user_id, tag, last_updated) VALUES (?, ?, ?, ?, ?)', (server, port, user_id, tag, datetime.utcnow()))
             await db.commit()
 
     async def generate_leaderboard(self):

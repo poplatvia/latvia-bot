@@ -30,6 +30,10 @@ class CraftprobeDb:
         async with aiosqlite.connect(self.db_name) as db:
             await db.execute('DELETE FROM playername_uuid WHERE player_name NOT GLOB "[a-zA-Z0-9_]*" or length(player_name) < 3 or length(player_name) > 16')
             await db.commit()
+            await db.execute('DELETE FROM players_seen WHERE player_uuid NOT IN (SELECT player_uuid FROM playername_uuid)')
+            await db.commit()
+            await db.execute('DELETE FROM inactive_servers')
+            await db.commit()    
 
     async def is_player_seen(self, username) -> bool:
         username = username.lower()
@@ -55,10 +59,66 @@ class CraftprobeDb:
                 timestamps.append(datetime.fromisoformat(row[0]))
             return timestamps
         
-    async def is_server_seen(self, server_ip) -> bool:
-        server_ip = server_ip.split(":")[0]
-
+    async def is_server_seen(self, server_ip, port) -> bool:
         async with aiosqlite.connect(self.db_name) as db:
-            cursor = await db.execute('SELECT COUNT(*) FROM servers where server_ip = ?', (server_ip,))
+            cursor = await db.execute('SELECT COUNT(*) FROM servers where server_ip = ? AND port = ?', (server_ip, port))
             row = await cursor.fetchall()
             return row[0][0] > 0
+        
+    async def get_random_server(self, version: str=None) -> str | None:
+        async with aiosqlite.connect(self.db_name) as db:
+            if version:
+                # union the servers table with the players_seen table to get a random server that has been seen with the specified version
+                cursor = await db.execute('SELECT server_ip, port FROM servers WHERE server_version = ? AND sorted_tag = "unsorted" AND concat(server_ip, ":", port) IN (SELECT server FROM players_seen) ORDER BY RANDOM() LIMIT 1', (version,))
+            else:
+                cursor = await db.execute('SELECT server_ip, port FROM servers WHERE sorted_tag = "unsorted" AND concat(server_ip, ":", port) IN (SELECT server FROM players_seen) ORDER BY RANDOM() LIMIT 1')
+            row = await cursor.fetchall()
+            if len(row) == 0:
+                return None
+
+            return f"{row[0][0]}:{row[0][1]}"
+    
+    async def mark_server_as_whitelisted(self, server_ip) -> bool:
+        server = server_ip.split(":")[0]
+        port = server_ip.split(":")[1]
+        # return false if no such server exists
+        if not await self.is_server_seen(server, port):
+            return False
+        async with aiosqlite.connect(self.db_name) as db:
+            await db.execute('UPDATE servers SET sorted_tag = "user_whitelist" WHERE server_ip = ? AND port = ?', (server, port))
+            await db.commit()
+        return True
+    
+    async def mark_server_as_hub(self, server_ip) -> bool:
+        server = server_ip.split(":")[0]
+        port = server_ip.split(":")[1]
+        # return false if no such server exists
+        if not await self.is_server_seen(server, port):
+            return False
+        async with aiosqlite.connect(self.db_name) as db:
+            await db.execute('UPDATE servers SET sorted_tag = "user_hub" WHERE server_ip = ? AND port = ?', (server, port))
+            await db.commit()
+        return True
+    
+    async def mark_server_as_modded(self, server_ip) -> bool:
+        server = server_ip.split(":")[0]
+        port = server_ip.split(":")[1]
+        # return false if no such server exists
+        if not await self.is_server_seen(server, port):
+            return False
+        async with aiosqlite.connect(self.db_name) as db:
+            await db.execute('UPDATE servers SET sorted_tag = "user_modded" WHERE server_ip = ? AND port = ?', (server, port))
+            await db.commit()
+        return True
+    
+    async def mark_server_as_couldnt_join(self, server_ip) -> bool:
+        server = server_ip.split(":")[0]
+        port = server_ip.split(":")[1]
+        # return false if no such server exists
+        if not await self.is_server_seen(server, port):
+            return False
+        async with aiosqlite.connect(self.db_name) as db:
+            await db.execute('UPDATE servers SET sorted_tag = "user_couldnt_join" WHERE server_ip = ? AND port = ?', (server, port))
+            await db.commit()
+        return True
+
