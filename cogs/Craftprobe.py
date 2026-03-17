@@ -23,7 +23,7 @@ class Craftprobe(commands.Cog):
     @scan_channel_only()
     async def whitelist(self, ctx, server: str):
         elo = await self.db.calculate_elo(ctx.user.id)
-        if elo < 50 or elo is None:
+        if elo < 25 or elo is None:
             await ctx.response.send_message("Your Elo is too low to use this command.", ephemeral=True)
             return
         await ctx.response.defer(ephemeral=True)
@@ -38,7 +38,7 @@ class Craftprobe(commands.Cog):
     @scan_channel_only()
     async def hub(self, ctx, server: str):
         elo = await self.db.calculate_elo(ctx.user.id)
-        if elo < 50 or elo is None:
+        if elo < 25 or elo is None:
             await ctx.response.send_message("Your Elo is too low to use this command.", ephemeral=True)
             return
         await ctx.response.defer(ephemeral=True)
@@ -53,7 +53,7 @@ class Craftprobe(commands.Cog):
     @scan_channel_only()
     async def modded(self, ctx, server: str):
         elo = await self.db.calculate_elo(ctx.user.id)
-        if elo < 50 or elo is None:
+        if elo < 25 or elo is None:
             await ctx.response.send_message("Your Elo is too low to use this command.", ephemeral=True)
             return
         await ctx.response.defer(ephemeral=True)
@@ -68,7 +68,7 @@ class Craftprobe(commands.Cog):
     @scan_channel_only()
     async def couldnt_join(self, ctx, server: str):
         elo = await self.db.calculate_elo(ctx.user.id)
-        if elo < 50 or elo is None:
+        if elo < 25 or elo is None:
             await ctx.response.send_message("Your Elo is too low to use this command.", ephemeral=True)
             return
         await ctx.response.defer(ephemeral=True)
@@ -82,7 +82,7 @@ class Craftprobe(commands.Cog):
     @get.subcommand(name="rserver", description="Get a random server.")
     async def rserver(self, ctx, version: str=None):
         elo = await self.db.calculate_elo(ctx.user.id)
-        if elo < 50 or elo is None:
+        if elo < 25 or elo is None:
             await ctx.response.send_message("Your Elo is too low to use this command.", ephemeral=True)
             return
         
