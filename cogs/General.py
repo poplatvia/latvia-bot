@@ -94,7 +94,7 @@ class GeneralCommands(commands.Cog):
     @nextcord.slash_command(name="leaderboard", description="Show the elo leaderboard.")
     @bot_channel_only()
     async def leaderboard(self, ctx):
-        leaderboard = await self.db.get_leaderboard(allow_min_or_max_elo=False)
+        leaderboard: dict[str, float] = await self.db.get_leaderboard(allow_min_or_max_elo=False)
         if not leaderboard:
             await ctx.send("Leaderboard is empty.")
             return

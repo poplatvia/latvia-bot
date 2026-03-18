@@ -3,6 +3,7 @@ from typing import List, Tuple
 import aiosqlite
 from datetime import datetime, timedelta
 import math
+from collections import Counter
 
 class Db:
     _instance = None
@@ -117,20 +118,20 @@ class Db:
                 await db.execute('INSERT INTO leaderboard (user_id, elo) VALUES (?, ?)', (str(user_id), elo))
             await db.commit()
 
-    async def get_leaderboard(self, n=5, allow_min_or_max_elo=True):
+    async def get_leaderboard(self, allow_min_or_max_elo=True):
         async with aiosqlite.connect(self.db_name) as db:
-            user_elo: dict = {}
-            for label in ["ASC", "DESC"]:
-                if not allow_min_or_max_elo:
-                    cursor = await db.execute(f'SELECT user_id, elo FROM leaderboard WHERE elo > 0 AND elo < 100 ORDER BY elo {label} LIMIT ?', (n,))
-                else:
-                    cursor = await db.execute(f'SELECT user_id, elo FROM leaderboard ORDER BY elo {label} LIMIT ?', (n,))
-                row = await cursor.fetchall()
-                for user in row:
-                    user_id = user[0]
-                    elo = user[1]
-                    user_elo[user_id] = elo
-            return user_elo
+            if not allow_min_or_max_elo:
+                cursor = await db.execute('SELECT user_id, elo FROM leaderboard WHERE elo > 0 AND elo < 100 ORDER BY elo DESC')
+            else:
+                cursor = await db.execute('SELECT user_id, elo FROM leaderboard ORDER BY elo DESC')
+            row = await cursor.fetchall()
+            all_users = {user[0]: user[1] for user in row}
+            top5: dict[str, float] = dict(Counter(all_users).most_common()[:5])
+            bottom5: dict[str, float] = dict(Counter(all_users).most_common()[:-6:-1])
+            #combine into one big dict
+            print(top5)
+            print(bottom5)
+            return top5 | bottom5
 
     # -------------- CSV -------------- #
     async def to_CSV(self):
