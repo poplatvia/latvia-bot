@@ -6,6 +6,7 @@ from cogs.Democracy import DemocracyCommands
 from cogs.General import GeneralCommands
 from cogs.Routines import Routines
 from cogs.Automata import Automata
+from cogs.Bullshit import Bullshit
 from db.CraftprobeDb import CraftprobeDb
 from db.Db import Db
 from cogs.Craftprobe import Craftprobe
@@ -41,5 +42,6 @@ client.add_cog(GeneralCommands(context))
 client.add_cog(Routines(context))
 client.add_cog(Craftprobe(context))
 client.add_cog(Automata(context))
+client.add_cog(Bullshit(context))
 
 client.run(open("token.txt", 'r').readline().replace("\n", ""))

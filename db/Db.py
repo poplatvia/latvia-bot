@@ -1,3 +1,4 @@
+import random
 from typing import List, Tuple
 
 import aiosqlite
@@ -85,6 +86,28 @@ class Db:
             await db.execute('CREATE TABLE IF NOT EXISTS tagged_servers (server_ip TEXT, port INTEGER, user_id INTEGER, tag TEXT, last_updated TIMESTAMP, PRIMARY KEY (server_ip, port, user_id))')
 
             await db.commit()
+
+    async def get_random_quote(self) -> Tuple[int, str, datetime] | None:
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT user_id, message_content, created_at FROM messages WHERE message_content IS NOT NULL ORDER BY RANDOM() LIMIT 1')
+            row = await cursor.fetchone()
+            return row if row else None
+    
+    async def get_random_message_with_curses(self, min_curses=3) -> Tuple[int, str, datetime] | None:
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT user_id, message_content, created_at FROM messages WHERE message_content IS NOT NULL')
+            row = await cursor.fetchall()
+            messages_with_curses = []
+            for message in row:
+                user_id = message[0]
+                message_content = message[1]
+                curse_count = self.language.number_of_curse_words(message_content)
+                if curse_count >= min_curses:
+                    messages_with_curses.append((user_id, message_content, message[2]))
+            if messages_with_curses:
+                return messages_with_curses[math.floor(random.random() * len(messages_with_curses))]
+            else:
+                return None
 
     async def insert_fetched_server(self, server_ip, user_id):
         server = server_ip.split(":")[0]
