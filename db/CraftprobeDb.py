@@ -2,7 +2,7 @@ from typing import Tuple
 
 import aiosqlite
 from datetime import datetime, timedelta
-import math
+import re
 
 class CraftprobeDb:
     _instance = None
@@ -121,4 +121,37 @@ class CraftprobeDb:
             await db.execute('UPDATE servers SET sorted_tag = "user_couldnt_join" WHERE server_ip = ? AND port = ?', (server, port))
             await db.commit()
         return True
+    
+    async def get_number_of_servers_with_version(self, version) -> int:
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT COUNT(*) FROM servers where server_version = ?', (version,))
+            row = await cursor.fetchall()
+            return row[0][0]
+        
+    async def get_number_of_players(self) -> int:
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT COUNT(DISTINCT player_uuid) FROM playername_uuid')
+            row = await cursor.fetchone()
+            return row[0]
+        
+    async def get_number_of_servers(self) -> int:
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT COUNT(*) FROM servers')
+            row = await cursor.fetchone()
+            return row[0]
+        
+    async def get_players_with_most_entries_in_players_seen(self) -> list[Tuple[str, int]]:
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT player_name, COUNT(*) as count FROM playername_uuid JOIN players_seen ON playername_uuid.player_uuid = players_seen.player_uuid GROUP BY playername_uuid.player_uuid ORDER BY count DESC LIMIT 10')
+            row = await cursor.fetchall()
+            return [(row[i][0], row[i][1]) for i in range(len(row))]
+        
+    async def get_likely_server_hosting_ips(self) -> list[Tuple[str, int]]:
+        # finds all servers with more than 50 server_ip entries with a different port.
+        # multiple ports with the same server_ip is a strong indicator of a hosting provider.
+        # Select random 10 of these hosting provider IPs and return them with the number of different ports they have in the database.
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT server_ip, COUNT(DISTINCT port) as count FROM servers GROUP BY server_ip HAVING count > 50 ORDER BY count DESC LIMIT 10')
+            row = await cursor.fetchall()
+            return [(row[i][0], row[i][1]) for i in range(len(row))]
 

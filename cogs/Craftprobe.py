@@ -2,6 +2,7 @@ import nextcord
 from nextcord.ext import commands
 from db.CraftprobeDb import CraftprobeDb
 from checks import bot_channel_only, scan_channel_only
+from typing import Tuple
 
 class Craftprobe(commands.Cog):
     def __init__(self, context):
@@ -138,3 +139,44 @@ class Craftprobe(commands.Cog):
         await self.craftprobe_db.preprocess()
         await ctx.followup.send("✅ Database preprocessed.")
 
+    @craftprobe.subcommand(name="number", description="Various counts from the database.")
+    async def number(self, ctx):
+        pass
+
+    @craftprobe.subcommand(name="leaderboard", description="Various leaderboards from the database.")
+    async def leaderboard(self, ctx):
+        pass
+
+    @number.subcommand(name="players", description="Get the number of unique players in the database.")
+    async def number_players(self, ctx):
+        await ctx.response.defer()
+        count = await self.craftprobe_db.get_number_of_players()
+        await ctx.followup.send(f"✅ There are {count} unique players in the database.")
+
+    @number.subcommand(name="servers", description="Get the number of unique servers in the database.")
+    async def number_servers(self, ctx):
+        await ctx.response.defer()
+        count = await self.craftprobe_db.get_number_of_servers()
+        await ctx.followup.send(f"✅ There are {count} unique servers in the database.")
+
+    @leaderboard.subcommand(name="players", description="Get the top 10 most seen players in the database.")
+    async def leaderboard_players(self, ctx):
+        await ctx.response.defer()
+        leaderboard: list[Tuple[str, int]] = await self.craftprobe_db.get_players_with_most_entries_in_players_seen()
+        # create embed
+        embed = nextcord.Embed(title="Top 10 Most Seen Players", description="The top 10 most seen players in the database.", color=0x00ff00)
+        for i, (player_name, count) in enumerate(leaderboard):
+            embed.add_field(name=f"{i+1}. {player_name}", value=f"Seen {count} times", inline=False)
+        await ctx.followup.send(embed=embed)
+
+    @get.subcommand(name="hosting_ips", description="Get likely server hosting provider IPs.")
+    async def hosting_ips(self, ctx):
+        await ctx.response.defer()
+        hosting_ips: list[Tuple[str, int]] = await self.craftprobe_db.get_likely_server_hosting_ips()
+        if hosting_ips:
+            response = "✅ Likely server hosting provider IPs:\n\n"
+            for ip, count in hosting_ips:
+                response += f"{ip} - {count} different ports\n"
+            await ctx.followup.send(response)
+        else:
+            await ctx.followup.send("❌ No likely server hosting provider IPs found.")
