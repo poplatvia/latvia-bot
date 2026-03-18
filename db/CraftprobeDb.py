@@ -162,7 +162,7 @@ class CraftprobeDb:
         # multiple ports with the same server_ip is a strong indicator of a hosting provider.
         # Select random 10 of these hosting provider IPs and return them with the number of different ports they have in the database.
         async with aiosqlite.connect(self.db_name) as db:
-            cursor = await db.execute('SELECT server_ip, COUNT(DISTINCT port) as count FROM servers GROUP BY server_ip HAVING count > 50 ORDER BY count DESC LIMIT 10')
+            cursor = await db.execute('SELECT server_ip, COUNT(DISTINCT port) as count FROM servers GROUP BY server_ip HAVING count > 50 ORDER BY RANDOM() DESC LIMIT 10')
             row = await cursor.fetchall()
             return [(row[i][0], row[i][1]) for i in range(len(row))]
 
