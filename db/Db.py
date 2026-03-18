@@ -129,8 +129,6 @@ class Db:
             top5: dict[str, float] = dict(Counter(all_users).most_common()[:5])
             bottom5: dict[str, float] = dict(Counter(all_users).most_common()[:-6:-1])
             #combine into one big dict
-            print(top5)
-            print(bottom5)
             return top5 | bottom5
 
     # -------------- CSV -------------- #
