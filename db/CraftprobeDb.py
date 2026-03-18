@@ -30,8 +30,8 @@ class CraftprobeDb:
     async def preprocess(self):
         async with aiosqlite.connect(self.db_name) as db:
             # delete all servers with players seen who have invalid usernames. This is necessary because the players_seen table has a foreign key constraint on the playername_uuid table.
-            await db.execute('DELETE FROM servers WHERE concat(server_ip, ":", port) IN (SELECT server FROM players_seen WHERE player_uuid IN (SELECT player_uuid FROM playername_uuid WHERE player_name NOT GLOB "^[a.zA-Z0-9_]{3,16}$" or length(player_name) < 3 or length(player_name) > 16))')
-            await db.execute('DELETE FROM playername_uuid WHERE player_name NOT GLOB "^[a.zA-Z0-9_]{3,16}$" or length(player_name) < 3 or length(player_name) > 16')
+            await db.execute('DELETE FROM servers WHERE concat(server_ip, ":", port) IN (SELECT server FROM players_seen WHERE player_uuid IN (SELECT player_uuid FROM playername_uuid WHERE player_name NOT GLOB "[a-zA-Z0-9_]*" or length(player_name) < 3 or length(player_name) > 16))')
+            await db.execute('DELETE FROM playername_uuid WHERE player_name NOT GLOB "[a-zA-Z0-9_]*" or length(player_name) < 3 or length(player_name) > 16')
             await db.commit()
             await db.execute('DELETE FROM players_seen WHERE player_uuid NOT IN (SELECT player_uuid FROM playername_uuid)')
             await db.commit()
