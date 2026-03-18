@@ -29,7 +29,7 @@ language: Language = Language()
 db: Db = Db(language, config)
 ai: AI = AI(db, config)
 csdb = CsDb(config)
-craftprobe_db: CraftprobeDb = CraftprobeDb(config)
+craftprobe_db: CraftprobeDb = CraftprobeDb(config, db.db_name)
 context: Context = Context(client, db, craftprobe_db, config, language, ai, csdb)
 
 

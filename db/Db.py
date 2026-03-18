@@ -89,14 +89,14 @@ class Db:
         server = server_ip.split(":")[0]
         port = server_ip.split(":")[1]
         async with aiosqlite.connect(self.db_name) as db:
-            await db.execute('INSERT INTO fetched_servers (server_ip, port, user_id, last_updated) VALUES (?, ?, ?, ?)', (server, port, user_id, datetime.utcnow()))
+            await db.execute('INSERT OR REPLACE INTO fetched_servers (server_ip, port, user_id, last_updated) VALUES (?, ?, ?, ?)', (server, port, user_id, datetime.utcnow()))
             await db.commit()
 
     async def insert_whitelisted_server(self, server_ip, user_id):
         server = server_ip.split(":")[0]
         port = server_ip.split(":")[1]
         async with aiosqlite.connect(self.db_name) as db:
-            await db.execute('INSERT INTO tagged_servers (server_ip, port, user_id, tag, last_updated) VALUES (?, ?, ?, ?, ?)', (server, port, user_id, "whitelisted", datetime.utcnow()))
+            await db.execute('INSERT OR REPLACE INTO tagged_servers (server_ip, port, user_id, tag, last_updated) VALUES (?, ?, ?, ?, ?)', (server, port, user_id, "whitelisted", datetime.utcnow()))
             await db.commit()
 
     async def insert_tagged_server(self, server_ip, user_id, tag):
