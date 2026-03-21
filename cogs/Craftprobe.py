@@ -94,6 +94,21 @@ class Craftprobe(commands.Cog):
             await ctx.followup.send(f"{server}", ephemeral=True)
         else:
             await ctx.followup.send("No servers found in the database.", ephemeral=True)
+    
+    @get.subcommand(name="aserver", description="Get a random server not dependant on players being seen.")
+    async def aserver(self, ctx, version: str=None):
+        elo = await self.db.calculate_elo(ctx.user.id)
+        if elo < 25 or elo is None:
+            await ctx.response.send_message("Your Elo is too low to use this command.", ephemeral=True)
+            return
+        
+        await ctx.response.defer(ephemeral=True)
+        server = await self.craftprobe_db.get_any_random_server(version)
+        if server:
+            await self.db.insert_fetched_server(server, ctx.user.id)
+            await ctx.followup.send(f"{server}", ephemeral=True)
+        else:
+            await ctx.followup.send("No servers found in the database.", ephemeral=True)
 
     @get.subcommand(name="elligibles", description="Get the number of servers eligible for random server command.")
     @scan_channel_only()

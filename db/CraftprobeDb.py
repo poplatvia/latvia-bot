@@ -102,6 +102,19 @@ class CraftprobeDb:
             if server:
                 self.union_servers.remove(server)
             return server
+    
+    async def get_any_random_server(self, version: str = None) -> str | None:
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute('SELECT server_ip, port FROM tagged_servers')
+            rows = await cursor.fetchall()
+            tagged_servers = {f"{row[0]}:{row[1]}" for row in rows}
+
+            cursor = await db.execute('SELECT (server_ip || ":" || port) FROM servers WHERE server_version = ?' if version else 'SELECT (server_ip || ":" || port) FROM servers')
+            rows = await cursor.fetchall()
+            servers = [row[0] for row in rows if f"{row[0]}" not in tagged_servers]
+            if len(servers) == 0:
+                return None
+            return random.choice(servers)
             
     async def num_union_servers(self) -> int:
         return len(self.union_servers)
