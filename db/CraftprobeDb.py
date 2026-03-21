@@ -105,9 +105,10 @@ class CraftprobeDb:
     
     async def get_any_random_server(self, version: str = None) -> str | None:
         async with aiosqlite.connect(self.db_name) as db:
-            cursor = await db.execute('SELECT server_ip, port FROM tagged_servers')
-            rows = await cursor.fetchall()
-            tagged_servers = {f"{row[0]}:{row[1]}" for row in rows}
+            async with aiosqlite.connect(self.db) as bot_db:
+                cursor = await bot_db.execute('SELECT server_ip, port FROM tagged_servers')
+                rows = await cursor.fetchall()
+                tagged_servers = {f"{row[0]}:{row[1]}" for row in rows}
 
             cursor = await db.execute('SELECT (server_ip || ":" || port) FROM servers WHERE server_version = ?' if version else 'SELECT (server_ip || ":" || port) FROM servers')
             rows = await cursor.fetchall()
