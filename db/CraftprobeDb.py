@@ -2,7 +2,7 @@ from typing import Tuple
 
 import aiosqlite
 from datetime import datetime, timedelta
-import re
+import random
 
 class CraftprobeDb:
     _instance = None
@@ -18,6 +18,7 @@ class CraftprobeDb:
         self.config = config
         self.db = main_db_name
         self.db_name = db_name
+        self.union_servers = set()
 
         # check db exists
         try:
@@ -68,28 +69,41 @@ class CraftprobeDb:
             row = await cursor.fetchall()
             return row[0][0] > 0
         
-    async def get_random_server(self, version: str=None) -> str | None:
+    async def get_random_server(self, version: str = None) -> str | None:
         async with aiosqlite.connect(self.db_name) as db:
-            tagged_servers = set()
-            # very shotty fix
+            tagged_servers: set[str] = set()
             async with aiosqlite.connect(self.db) as bot_db:
                 cursor = await bot_db.execute('SELECT server_ip, port FROM tagged_servers')
                 rows = await cursor.fetchall()
                 tagged_servers = {f"{row[0]}:{row[1]}" for row in rows}
+
+            if len(self.union_servers) < 10:
+                cursor = await db.execute('SELECT server FROM players_seen')
+                rows = await cursor.fetchall()
+                # add port 25565 to all servers without a port.
+                set_servers1: set[str] = {row[0] if ':' in row[0] else f"{row[0]}:25565" for row in rows}
+
+                cursor = await db.execute('SELECT (server_ip || ":" || port), server_version FROM servers')
+                rows = await cursor.fetchall()
+                dict_servers2: dict[str, str] = {row[0]: row[1] for row in rows}
+
+                for s in dict_servers2:
+                    if s in set_servers1:
+                        self.union_servers.add(s)
+
+            # print(f"Unique servers in players_seen and servers: {len(self.union_servers)}")
+            # print(f"Head of union servers: {list(self.union_servers)[:10]}")
+
             if version:
-                # union the servers table with the players_seen table to get a random server that has been seen with the specified version
-                cursor = await db.execute('SELECT server_ip, port FROM servers WHERE server_version = ? AND sorted_tag = "unsorted" AND concat(server_ip, ":", port) IN (SELECT server FROM players_seen) ORDER BY RANDOM() LIMIT 10', (version,))
+                server = random.choice([s for s in self.union_servers if dict_servers2.get(s) == version and s not in tagged_servers]) if len(self.union_servers) > 0 else None
             else:
-                cursor = await db.execute('SELECT server_ip, port FROM servers WHERE sorted_tag = "unsorted" AND concat(server_ip, ":", port) IN (SELECT server FROM players_seen) ORDER BY RANDOM() LIMIT 10')
-            rows = await cursor.fetchall()
+                server = random.choice([s for s in self.union_servers if s not in tagged_servers]) if len(self.union_servers) > 0 else None
+            # remove the server from the union servers set to avoid repeats in the future.
+            if server:
+                self.union_servers.remove(server)
+            return server
+            
 
-            for row in rows:
-                server_address = f"{row[0]}:{row[1]}"
-                
-                if server_address not in tagged_servers:
-                    return server_address
-
-            return None
     
     async def mark_server_as_whitelisted(self, server_ip) -> bool:
         server = server_ip.split(":")[0]

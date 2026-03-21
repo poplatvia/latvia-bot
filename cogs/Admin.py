@@ -8,6 +8,7 @@ class AdminCommands(commands.Cog):
     def __init__(self, context):
         self.bot = context.client
         self.db = context.db
+        self.cpdb = context.craftprobe_db
         self.csdb = context.csdb
         self.conf = context.config
 
@@ -110,3 +111,19 @@ class AdminCommands(commands.Cog):
             return
         self.conf.reset_config()
         await ctx.response.send_message("Config reset to default.", ephemeral=True)
+
+    @nextcord.slash_command(name="num_servers_until_repeat", description="(Admin command)")
+    async def num_servers_until_repeat(self, ctx):
+        if ctx.user.id not in self.conf.config["admins"]:
+            await ctx.response.send_message("Admins only.", ephemeral=True)
+            return
+        await ctx.response.defer(ephemeral=True)
+        servers: set[int] = set()
+        for _ in range(0, 10000):
+            rserver = await self.cpdb.get_random_server()
+            print(rserver)
+            if rserver in servers:
+                await ctx.followup.send(f"Number of unique servers until repeat: {len(servers)}", ephemeral=True)
+                return
+            servers.add(rserver)
+        await ctx.followup.send(f"More than 10,000 unique servers without repeat.", ephemeral=True)
