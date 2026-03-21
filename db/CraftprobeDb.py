@@ -103,7 +103,8 @@ class CraftprobeDb:
                 self.union_servers.remove(server)
             return server
             
-
+    async def num_union_servers(self) -> int:
+        return len(self.union_servers)
     
     async def mark_server_as_whitelisted(self, server_ip) -> bool:
         server = server_ip.split(":")[0]

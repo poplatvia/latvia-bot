@@ -95,6 +95,12 @@ class Craftprobe(commands.Cog):
         else:
             await ctx.followup.send("No servers found in the database.", ephemeral=True)
 
+    @get.subcommand(name="elligibles", description="Get the number of servers eligible for random server command.")
+    @scan_channel_only()
+    async def elligibles(self, ctx):
+        await ctx.response.defer()
+        count = await self.craftprobe_db.num_union_servers()
+        await ctx.followup.send(f"✅ There are {count} eligible servers for the random server command.")
 
     @craftprobe.subcommand(name="seen", description="Check if a player has been seen on the server.")
     @bot_channel_only()
